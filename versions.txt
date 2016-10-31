@@ -3,7 +3,7 @@
 nginx_version=1.10.1
 tengine_version=2.1.1
 openresty_version=1.11.2.1
-openssl_version=1.0.2h
+openssl_version=1.0.2j
 
 tomcat_8_version=8.0.30
 tomcat_7_version=7.0.69
@@ -16,17 +16,17 @@ apr_version=1.5.2
 apr_util_version=1.5.4
 
 # DB
-mysql_5_7_version=5.7.15
-mysql_5_6_version=5.6.33
-mysql_5_5_version=5.5.52
+mysql_5_7_version=5.7.16
+mysql_5_6_version=5.6.34
+mysql_5_5_version=5.5.53
 
-mariadb_10_1_version=10.1.17
+mariadb_10_1_version=10.1.18
 mariadb_10_0_version=10.0.27
-mariadb_5_5_version=5.5.51
+mariadb_5_5_version=5.5.52
 
-percona_5_7_version=5.7.14-7
-percona_5_6_version=5.6.32-78.0
-percona_5_5_version=5.5.51-38.1
+percona_5_7_version=5.7.14-8
+percona_5_6_version=5.6.32-78.1
+percona_5_5_version=5.5.52-38.3
 
 # JDK
 jdk_8_version=1.8.0_102
@@ -34,23 +34,24 @@ jdk_7_version=1.7.0_80
 jdk_6_version=1.6.0_45
 
 # PHP
-php_7_version=7.0.10
-php_6_version=5.6.25
+php_7_version=7.0.11
+php_6_version=5.6.26
 php_5_version=5.5.38
 php_4_version=5.4.45
 php_3_version=5.3.29
 
 zendopcache_version=7.0.5
 xcache_version=3.2.0
-apcu_version=4.0.10
-ImageMagick_version=6.9.5-9
+apcu_version=4.0.11
+apcu_for_php7_version=5.1.6
+ImageMagick_version=6.9.6-2
 imagick_version=3.4.1
 imagick_for_php53_version=3.3.0
-GraphicsMagick_version=1.3.24
+GraphicsMagick_version=1.3.25
 gmagick_for_php7_version=2.0.4RC1
 gmagick_version=1.1.7RC3
 libiconv_version=1.14
-curl_version=7.35.0
+curl_version=7.50.3
 libmcrypt_version=2.5.8
 mcrypt_version=2.6.8
 mhash_version=0.9.9.9
@@ -60,7 +61,7 @@ eaccelerator_version=0.9.6.1
 pureftpd_version=1.0.43
 
 # Redis
-redis_version=3.2.3
+redis_version=3.2.4
 redis_pecl_for_php7_version=3.0.0
 redis_pecl_version=2.2.8
 
@@ -80,9 +81,10 @@ jemalloc_version=4.2.1
 tcmalloc_version=2.5
 
 # boost
-boost_version=1.60.0
+boost_version=1.59.0
 
 # Others
 libevent_version=2.0.22-stable
 tmux_version=2.2
 htop_version=2.0.2
+bison_version=2.7.1
