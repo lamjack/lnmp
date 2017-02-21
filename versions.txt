@@ -1,90 +1,94 @@
 # newest software version
 # Web
-nginx_version=1.10.1
-tengine_version=2.1.1
-openresty_version=1.11.2.1
-openssl_version=1.0.2j
+nginx_version=1.10.3
+tengine_version=2.1.2
+openresty_version=1.11.2.2
+openssl_version=1.0.2k
 
-tomcat_8_version=8.0.30
-tomcat_7_version=7.0.69
-tomcat_6_version=6.0.45
+tomcat8_version=8.0.41
+tomcat7_version=7.0.75
+tomcat6_version=6.0.48
 
-apache_4_version=2.4.23
-apache_2_version=2.2.31
+apache24_version=2.4.25
+apache22_version=2.2.32
 pcre_version=8.39
 apr_version=1.5.2
 apr_util_version=1.5.4
+nghttp2_version=1.18.1
 
 # DB
-mysql_5_7_version=5.7.16
-mysql_5_6_version=5.6.34
-mysql_5_5_version=5.5.53
+mysql57_version=5.7.17
+mysql56_version=5.6.35
+mysql55_version=5.5.54
 
-mariadb_10_1_version=10.1.18
-mariadb_10_0_version=10.0.27
-mariadb_5_5_version=5.5.52
+mariadb101_version=10.1.21
+mariadb100_version=10.0.29
+mariadb55_version=5.5.54
 
-percona_5_7_version=5.7.14-8
-percona_5_6_version=5.6.32-78.1
-percona_5_5_version=5.5.52-38.3
+percona57_version=5.7.17-11
+percona56_version=5.6.35-80.0
+percona55_version=5.5.54-38.6
+
+alisql56_version=5.6.32-3
 
 # JDK
-jdk_8_version=1.8.0_102
-jdk_7_version=1.7.0_80
-jdk_6_version=1.6.0_45
+jdk18_version=1.8.0_121
+jdk17_version=1.7.0_80
+jdk16_version=1.6.0_45
 
 # PHP
-php_7_version=7.0.11
-php_6_version=5.6.26
-php_5_version=5.5.38
-php_4_version=5.4.45
-php_3_version=5.3.29
+php71_version=7.1.2
+php70_version=7.0.16
+php56_version=5.6.30
+php55_version=5.5.38
+php54_version=5.4.45
+php53_version=5.3.29
 
 zendopcache_version=7.0.5
 xcache_version=3.2.0
 apcu_version=4.0.11
-apcu_for_php7_version=5.1.6
-ImageMagick_version=6.9.6-2
-imagick_version=3.4.1
+apcu_for_php7_version=5.1.8
+ImageMagick_version=6.9.7-6
+imagick_version=3.4.3
 imagick_for_php53_version=3.3.0
 GraphicsMagick_version=1.3.25
 gmagick_for_php7_version=2.0.4RC1
 gmagick_version=1.1.7RC3
 libiconv_version=1.14
-curl_version=7.50.3
+curl_version=7.52.1
 libmcrypt_version=2.5.8
 mcrypt_version=2.6.8
 mhash_version=0.9.9.9
 eaccelerator_version=0.9.6.1
 
 # Ftp
-pureftpd_version=1.0.43
+pureftpd_version=1.0.45
 
 # Redis
-redis_version=3.2.4
-redis_pecl_for_php7_version=3.0.0
+redis_version=3.2.8
+redis_pecl_for_php7_version=3.1.1
 redis_pecl_version=2.2.8
 
 # Memcached
-memcached_version=1.4.31
+memcached_version=1.4.34
 libmemcached_version=1.0.18
 memcached_pecl_version=2.2.0
 memcache_pecl_version=3.0.8
 
 # phpMyadmin
-phpMyAdmin_version=4.4.15.8
+phpMyAdmin_version=4.4.15.10
 
 # jemalloc
-jemalloc_version=4.2.1
-
-# tcmalloc
-tcmalloc_version=2.5
+jemalloc_version=4.4.0
 
 # boost
 boost_version=1.59.0
 
 # Others
 libevent_version=2.0.22-stable
-tmux_version=2.2
+tmux_version=2.3
 htop_version=2.0.2
 bison_version=2.7.1
+python_version=2.7.13
+setuptools_version=32.0.0
+pip_version=9.0.1

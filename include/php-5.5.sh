@@ -8,7 +8,7 @@
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
-Install_PHP-5-5() {
+Install_PHP55() {
   pushd ${oneinstack_dir}/src
   
   tar xzf libiconv-$libiconv_version.tar.gz
@@ -58,9 +58,9 @@ Install_PHP-5-5() {
   
   id -u $run_user >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin $run_user
-  tar xzf php-$php_5_version.tar.gz
-  patch -d php-$php_5_version -p0 < fpm-race-condition.patch
-  pushd php-$php_5_version
+  tar xzf php-$php55_version.tar.gz
+  patch -d php-$php55_version -p0 < fpm-race-condition.patch
+  pushd php-$php55_version
   [ ! -d "$php_install_dir" ] && mkdir -p $php_install_dir
   [ "$PHP_cache" == '1' ] && PHP_cache_tmp='--enable-opcache' || PHP_cache_tmp='--disable-opcache'
   if [[ $Apache_version =~ ^[1-2]$ ]] || [ -e "$apache_install_dir/bin/apxs" ]; then
@@ -73,7 +73,7 @@ Install_PHP-5-5() {
     --enable-sysvsem --enable-inline-optimization --with-curl=/usr/local --enable-mbregex \
     --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf --with-openssl \
     --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --enable-intl --with-xsl \
-    --with-gettext --enable-zip --enable-soap --disable-ipv6 --disable-debug
+    --with-gettext --enable-zip --enable-soap --disable-debug $php_modules_options
   else
     ./configure --prefix=$php_install_dir --with-config-file-path=$php_install_dir/etc \
     --with-config-file-scan-dir=$php_install_dir/etc/php.d \
@@ -84,7 +84,7 @@ Install_PHP-5-5() {
     --enable-sysvsem --enable-inline-optimization --with-curl=/usr/local --enable-mbregex \
     --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf --with-openssl \
     --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --enable-intl --with-xsl \
-    --with-gettext --enable-zip --enable-soap --disable-ipv6 --disable-debug
+    --with-gettext --enable-zip --enable-soap --disable-debug $php_modules_options
   fi
   make ZEND_EXTRA_LIBS='-liconv' -j ${THREAD}
   make install
@@ -233,6 +233,6 @@ EOF
     service httpd restart
   fi
   popd
-  [ -e "$php_install_dir/bin/phpize" ] && rm -rf php-$php_5_version
+  [ -e "$php_install_dir/bin/phpize" ] && rm -rf php-$php55_version
   popd
 }

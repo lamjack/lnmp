@@ -32,7 +32,7 @@ Usage(){
 Usage: $0 [  ${CMSG}all${CEND} | ${CMSG}web${CEND} | ${CMSG}db${CEND} | ${CMSG}php${CEND} | ${CMSG}hhvm${CEND} | ${CMSG}pureftpd${CEND} | ${CMSG}redis${CEND} | ${CMSG}memcached${CEND} ]
 ${CMSG}all${CEND}            --->Uninstall All
 ${CMSG}web${CEND}            --->Uninstall Nginx/Tengine/Apache/Tomcat
-${CMSG}db${CEND}             --->Uninstall MySQL/MariaDB/Percona
+${CMSG}db${CEND}             --->Uninstall MySQL/MariaDB/Percona/AliSQL
 ${CMSG}php${CEND}            --->Uninstall PHP
 ${CMSG}hhvm${CEND}           --->Uninstall HHVM
 ${CMSG}pureftpd${CEND}       --->Uninstall PureFtpd
@@ -75,6 +75,7 @@ Print_web() {
   [ -e "/etc/logrotate.d/tomcat" ] && echo "/etc/logrotate.d/tomcat"
   [ -d "/usr/java" ] && echo '/usr/java'
   [ -d "/usr/local/apr" ] && echo '/usr/local/apr'
+  [ -d "${openssl_install_dir}" ] && echo "${openssl_install_dir}"
 }
 
 Uninstall_Web() {
@@ -84,6 +85,7 @@ Uninstall_Web() {
   [ -d "${apache_install_dir}" ] && { service httpd stop > /dev/null 2>&1; rm -rf ${apache_install_dir} /etc/init.d/httpd /etc/logrotate.d/apache; sed -i "s@${apache_install_dir}/bin:@@" /etc/profile; }
   [ -d "${tomcat_install_dir}" ] && { killall java > /dev/null 2>&1; chmod +x /etc/logrotate.d/tomcat; rm -rf ${tomcat_install_dir} /etc/init.d/tomcat /etc/logrotate.d/tomcat /usr/local/apr; }
   [ -d "/usr/java" ] && { rm -rf /usr/java; sed -i '/export JAVA_HOME=/d' /etc/profile; sed -i '/export CLASSPATH=/d' /etc/profile; sed -i 's@\$JAVA_HOME/bin:@@' /etc/profile; }
+  [ -d "${openssl_install_dir}" ] && rm -rf ${openssl_install_dir}
   [ -e "${wwwroot_dir}" ] && /bin/mv ${wwwroot_dir}{,$(date +%Y%m%d%H)}
   sed -i 's@^website_name=.*@website_name=@' ./options.conf
   sed -i 's@^local_bankup_yn=.*@local_bankup_yn=y@' ./options.conf
@@ -98,7 +100,7 @@ Print_DB() {
 }
 
 Uninstall_DB() {
-  [ -e "${db_install_dir}" ] && { service mysqld stop > /dev/null 2>&1; rm -rf ${db_install_dir} /etc/init.d/mysqld /etc/my.cnf /etc/ld.so.conf.d/{mysql,mariadb,percona}*.conf; }
+  [ -e "${db_install_dir}" ] && { service mysqld stop > /dev/null 2>&1; rm -rf ${db_install_dir} /etc/init.d/mysqld /etc/my.cnf /etc/ld.so.conf.d/{mysql,mariadb,percona,alisql}*.conf; }
   id -u mysql >/dev/null 2>&1 ; [ $? -eq 0 ] && userdel mysql
   [ -e "${db_data_dir}" ] && /bin/mv ${db_data_dir}{,$(date +%Y%m%d%H)}
   sed -i 's@^dbrootpwd=.*@dbrootpwd=@' ./options.conf
@@ -111,6 +113,7 @@ Print_PHP() {
   [ -e "/etc/init.d/php-fpm" ] && echo "/etc/init.d/php-fpm"
   [ -e "/usr/local/imagemagick" ] && echo "/usr/local/imagemagick"
   [ -e "/usr/local/graphicsmagick" ] && echo '/usr/local/graphicsmagick'
+  [ -e "/usr/local/openssl100s" ] && echo '/usr/local/openssl100s'
 }
 
 Uninstall_PHP() {
@@ -118,6 +121,7 @@ Uninstall_PHP() {
   [ -e "${php_install_dir}/bin/phpize" -a ! -e "${php_install_dir}/etc/php-fpm.conf" ] && rm -rf ${php_install_dir}
   [ -e "/usr/local/imagemagick" ] && rm -rf /usr/local/imagemagick
   [ -e "/usr/local/graphicsmagick" ] && rm -rf /usr/local/graphicsmagick
+  [ -e "/usr/local/openssl100s" ] && rm -rf /usr/local/openssl100s 
   sed -i "s@${php_install_dir}/bin:@@" /etc/profile
   echo "${CMSG}PHP uninstall completed${CEND}"
 }
@@ -176,7 +180,7 @@ while :; do
 What Are You Doing?
 \t${CMSG}0${CEND}. Uninstall All
 \t${CMSG}1${CEND}. Uninstall Nginx/Tengine/Apache/Tomcat
-\t${CMSG}2${CEND}. Uninstall MySQL/MariaDB/Percona
+\t${CMSG}2${CEND}. Uninstall MySQL/MariaDB/Percona/AliSQL
 \t${CMSG}3${CEND}. Uninstall PHP
 \t${CMSG}4${CEND}. Uninstall HHVM
 \t${CMSG}5${CEND}. Uninstall PureFtpd

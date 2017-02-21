@@ -8,7 +8,7 @@
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
-Install_PHP-5-6() {
+Install_PHP56() {
   pushd ${oneinstack_dir}/src
   
   tar xzf libiconv-$libiconv_version.tar.gz
@@ -59,8 +59,8 @@ Install_PHP-5-6() {
   id -u $run_user >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin $run_user
   
-  tar xzf php-$php_6_version.tar.gz
-  pushd php-$php_6_version
+  tar xzf php-$php56_version.tar.gz
+  pushd php-$php56_version
   make clean
   [ ! -d "$php_install_dir" ] && mkdir -p $php_install_dir
   [ "$PHP_cache" == '1' ] && PHP_cache_tmp='--enable-opcache' || PHP_cache_tmp='--disable-opcache'
@@ -74,7 +74,7 @@ Install_PHP-5-6() {
     --enable-sysvsem --enable-inline-optimization --with-curl=/usr/local --enable-mbregex \
     --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf --with-openssl \
     --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --enable-intl --with-xsl \
-    --with-gettext --enable-zip --enable-soap --disable-ipv6 --disable-debug
+    --with-gettext --enable-zip --enable-soap --disable-debug $php_modules_options
   else
     ./configure --prefix=$php_install_dir --with-config-file-path=$php_install_dir/etc \
     --with-config-file-scan-dir=$php_install_dir/etc/php.d \
@@ -85,7 +85,7 @@ Install_PHP-5-6() {
     --enable-sysvsem --enable-inline-optimization --with-curl=/usr/local --enable-mbregex \
     --enable-mbstring --with-mcrypt --with-gd --enable-gd-native-ttf --with-openssl \
     --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-ftp --enable-intl --with-xsl \
-    --with-gettext --enable-zip --enable-soap --disable-ipv6 --disable-debug
+    --with-gettext --enable-zip --enable-soap --disable-debug $php_modules_options
   fi
   make ZEND_EXTRA_LIBS='-liconv' -j ${THREAD}
   make install
@@ -234,6 +234,6 @@ EOF
     service httpd restart
   fi
   popd
-  [ -e "$php_install_dir/bin/phpize" ] && rm -rf php-$php_6_version
+  [ -e "$php_install_dir/bin/phpize" ] && rm -rf php-$php56_version
   popd
 }

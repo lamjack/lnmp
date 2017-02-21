@@ -8,67 +8,55 @@
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
-Install_Percona57() {
+Install_AliSQL56() {
   pushd ${oneinstack_dir}/src
 
   id -u mysql >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin mysql
 
-  [ ! -d "${percona_install_dir}" ] && mkdir -p ${percona_install_dir}
-  mkdir -p ${percona_data_dir};chown mysql.mysql -R ${percona_data_dir}
+  [ ! -d "${alisql_install_dir}" ] && mkdir -p ${alisql_install_dir}
+  mkdir -p ${alisql_data_dir};chown mysql.mysql -R ${alisql_data_dir}
 
-  if [ "${dbInstallMethods}" == "1" ]; then
-    tar xvf Percona-Server-${percona57_version}-Linux.${SYS_BIT_b}.${sslLibVer}.tar.gz
-    mv Percona-Server-${percona57_version}-Linux.${SYS_BIT_b}.${sslLibVer}/* ${percona_install_dir}
-    sed -i 's@executing mysqld_safe@executing mysqld_safe\nexport LD_PRELOAD=/usr/local/lib/libjemalloc.so@' ${percona_install_dir}/bin/mysqld_safe
-  elif [ "${dbInstallMethods}" == "2" ]; then
-    tar xvf percona-server-${percona57_version}.tar.gz
-    pushd percona-server-${percona57_version}
-    cmake . -DCMAKE_INSTALL_PREFIX=${percona_install_dir} \
-    -DMYSQL_DATADIR=${percona_data_dir} \
-    -DSYSCONFDIR=/etc \
-    -DWITH_INNOBASE_STORAGE_ENGINE=1 \
-    -DWITH_PARTITION_STORAGE_ENGINE=1 \
-    -DWITH_FEDERATED_STORAGE_ENGINE=1 \
-    -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
-    -DWITH_MYISAM_STORAGE_ENGINE=1 \
-    -DWITH_EMBEDDED_SERVER=1 \
-    -DWITH_ARCHIVE_STORAGE_ENGINE=1 \
-    -DWITH_ZLIB=system \
-    -DENABLE_DTRACE=0 \
-    -DENABLED_LOCAL_INFILE=1 \
-    -DDEFAULT_CHARSET=utf8mb4 \
-    -DDEFAULT_COLLATION=utf8mb4_general_ci \
-    -DEXTRA_CHARSETS=all \
-    -DCMAKE_EXE_LINKER_FLAGS='-ljemalloc'
-    make -j ${THREAD}
-    make install
-    popd
-  fi
+  tar xvf alisql-${alisql56_version}.tar.gz
+  pushd alisql-${alisql56_version}
+  cmake . -DCMAKE_INSTALL_PREFIX=${alisql_install_dir} \
+  -DMYSQL_DATADIR=${alisql_data_dir} \
+  -DSYSCONFDIR=/etc \
+  -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+  -DWITH_PARTITION_STORAGE_ENGINE=1 \
+  -DWITH_FEDERATED_STORAGE_ENGINE=1 \
+  -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
+  -DWITH_MYISAM_STORAGE_ENGINE=1 \
+  -DWITH_EMBEDDED_SERVER=1 \
+  -DENABLE_DTRACE=0 \
+  -DENABLED_LOCAL_INFILE=1 \
+  -DDEFAULT_CHARSET=utf8mb4 \
+  -DDEFAULT_COLLATION=utf8mb4_general_ci \
+  -DEXTRA_CHARSETS=all
+  make -j ${THREAD}
+  make install
+  popd
 
-  if [ -d "${percona_install_dir}/support-files" ]; then
-    echo "${CSUCCESS}Percona installed successfully! ${CEND}"
-    if [ "${dbInstallMethods}" == "1" ]; then
-      rm -rf Percona-Server-${percona57_version}-Linux.${SYS_BIT_b}.${sslLibVer}
-    elif [ "${dbInstallMethods}" == "2" ]; then
-      rm -rf percona-server-${percona57_version}
-    fi
+  if [ -d "${alisql_install_dir}/support-files" ]; then
+    echo "${CSUCCESS}AliSQL installed successfully! ${CEND}"
+    rm -rf alisql-${alisql56_version}
   else
-    rm -rf ${percona_install_dir}
-    rm -rf percona-server-${percona57_version}
-    echo "${CFAILURE}Percona install failed, Please contact the author! ${CEND}"
+    rm -rf ${alisql_install_dir}
+    rm -rf alisql-${alisql56_version}
+    echo "${CFAILURE}AliSQL install failed, Please contact the author! ${CEND}"
     kill -9 $$
   fi
 
-  /bin/cp ${percona_install_dir}/support-files/mysql.server /etc/init.d/mysqld
-  sed -i "s@^basedir=.*@basedir=${percona_install_dir}@" /etc/init.d/mysqld
-  sed -i "s@^datadir=.*@datadir=${percona_data_dir}@" /etc/init.d/mysqld
+  /bin/cp ${alisql_install_dir}/support-files/mysql.server /etc/init.d/mysqld
+  sed -i "s@^basedir=.*@basedir=${alisql_install_dir}@" /etc/init.d/mysqld
+  sed -i "s@^datadir=.*@datadir=${alisql_data_dir}@" /etc/init.d/mysqld
   chmod +x /etc/init.d/mysqld
   [ "${OS}" == "CentOS" ] && { chkconfig --add mysqld; chkconfig mysqld on; }
   [[ "${OS}" =~ ^Ubuntu$|^Debian$ ]] && update-rc.d mysqld defaults
   popd
 
   # my.cnf
+  [ -d "/etc/mysql" ] && /bin/mv /etc/mysql{,_bk}
   cat > /etc/my.cnf << EOF
 [client]
 port = 3306
@@ -76,16 +64,16 @@ socket = /tmp/mysql.sock
 default-character-set = utf8mb4
 
 [mysql]
-prompt="Percona [\\d]> "
+prompt="AliSQL [\\d]> "
 no-auto-rehash
 
 [mysqld]
 port = 3306
 socket = /tmp/mysql.sock
 
-basedir = ${percona_install_dir}
-datadir = ${percona_data_dir}
-pid-file = ${percona_data_dir}/mysql.pid
+basedir = ${alisql_install_dir}
+datadir = ${alisql_data_dir}
+pid-file = ${alisql_data_dir}/mysql.pid
 user = mysql
 bind-address = 0.0.0.0
 server-id = 1
@@ -124,10 +112,10 @@ log_bin = mysql-bin
 binlog_format = mixed
 expire_logs_days = 7
 
-log_error = ${percona_data_dir}/mysql-error.log
+log_error = ${alisql_data_dir}/mysql-error.log
 slow_query_log = 1
 long_query_time = 1
-slow_query_log_file = ${percona_data_dir}/mysql-slow.log
+slow_query_log_file = ${alisql_data_dir}/mysql-slow.log
 
 performance_schema = 0
 explicit_defaults_for_timestamp
@@ -197,21 +185,25 @@ EOF
     sed -i 's@^table_open_cache.*@table_open_cache = 1024@' /etc/my.cnf
   fi
 
-  ${percona_install_dir}/bin/mysqld --initialize-insecure --user=mysql --basedir=${percona_install_dir} --datadir=${percona_data_dir}
+  ${alisql_install_dir}/scripts/mysql_install_db --user=mysql --basedir=${alisql_install_dir} --datadir=${alisql_data_dir}
 
-  chown mysql.mysql -R ${percona_data_dir}
-  [ -d "/etc/mysql" ] && /bin/mv /etc/mysql{,_bk}
+  chown mysql.mysql -R ${alisql_data_dir}
+  [ -d "/etc/mysql" ] && mv /etc/mysql{,_bk}
   service mysqld start
-  [ -z "$(grep ^'export PATH=' /etc/profile)" ] && echo "export PATH=${percona_install_dir}/bin:\$PATH" >> /etc/profile
-  [ -n "$(grep ^'export PATH=' /etc/profile)" -a -z "$(grep ${percona_install_dir} /etc/profile)" ] && sed -i "s@^export PATH=\(.*\)@export PATH=${percona_install_dir}/bin:\1@" /etc/profile
+  [ -z "$(grep ^'export PATH=' /etc/profile)" ] && echo "export PATH=${alisql_install_dir}/bin:\$PATH" >> /etc/profile
+  [ -n "$(grep ^'export PATH=' /etc/profile)" -a -z "$(grep ${alisql_install_dir} /etc/profile)" ] && sed -i "s@^export PATH=\(.*\)@export PATH=${alisql_install_dir}/bin:\1@" /etc/profile
   . /etc/profile
 
-  ${percona_install_dir}/bin/mysql -e "grant all privileges on *.* to root@'127.0.0.1' identified by \"${dbrootpwd}\" with grant option;"
-  ${percona_install_dir}/bin/mysql -e "grant all privileges on *.* to root@'localhost' identified by \"${dbrootpwd}\" with grant option;"
-  ${percona_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "reset master;"
+  ${alisql_install_dir}/bin/mysql -e "grant all privileges on *.* to root@'127.0.0.1' identified by \"${dbrootpwd}\" with grant option;"
+  ${alisql_install_dir}/bin/mysql -e "grant all privileges on *.* to root@'localhost' identified by \"${dbrootpwd}\" with grant option;"
+  ${alisql_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "delete from mysql.user where Password='';"
+  ${alisql_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "delete from mysql.db where User='';"
+  ${alisql_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "delete from mysql.proxies_priv where Host!='localhost';"
+  ${alisql_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "drop database test;"
+  ${alisql_install_dir}/bin/mysql -uroot -p${dbrootpwd} -e "reset master;"
   rm -rf /etc/ld.so.conf.d/{mysql,mariadb,percona,alisql}*.conf
-  [ -e "${percona_install_dir}/my.cnf" ] && rm -rf ${percona_install_dir}/my.cnf
-  echo "${percona_install_dir}/lib" > /etc/ld.so.conf.d/mysql.conf
+  [ -e "${alisql_install_dir}/my.cnf" ] && rm -rf ${alisql_install_dir}/my.cnf
+  echo "${alisql_install_dir}/lib" > /etc/ld.so.conf.d/alisql.conf
   ldconfig
   service mysqld stop
 }
