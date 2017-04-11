@@ -449,6 +449,10 @@ IPADDR_COUNTRY_ISP=`./include/get_ipaddr_state.py $PUBLIC_IPADDR`
 IPADDR_COUNTRY=`echo $IPADDR_COUNTRY_ISP | awk '{print $1}'`
 [ "`echo $IPADDR_COUNTRY_ISP | awk '{print $2}'`"x == '1000323'x ] && IPADDR_ISP=aliyun
 
+# del openssl for jcloud
+[ -e "/usr/local/bin/openssl" ] && rm -rf /usr/local/bin/openssl
+[ -e "/usr/local/include/openssl" ] && rm -rf /usr/local/include/openssl
+
 # Check binary dependencies packages
 . ./include/check_sw.sh
 case "${OS}" in
@@ -464,6 +468,7 @@ case "${OS}" in
 esac
 
 # init
+startTime=`date +%s`
 . ./include/memory.sh
 case "${OS}" in
   "CentOS")
@@ -487,7 +492,7 @@ checkDownload 2>&1 | tee -a ${oneinstack_dir}/install.log
 installDepsBySrc 2>&1 | tee -a ${oneinstack_dir}/install.log
 
 # Jemalloc
-if [[ $Nginx_version =~ ^[1-3]$ ]] || [ "$DB_yn" == 'y' -a "$DB_version" != '10' ]; then
+if [[ $Nginx_version =~ ^[1-3]$ ]] || [ "$DB_yn" == 'y' ]; then
   . include/jemalloc.sh
   Install_Jemalloc | tee -a $oneinstack_dir/install.log
 fi
@@ -734,8 +739,10 @@ fi
 # Starting DB
 [ -d "/etc/mysql" ] && /bin/mv /etc/mysql{,_bk}
 [ -d "${db_install_dir}/support-files" -a -z "$(ps -ef | grep -v grep | grep mysql)" ] && /etc/init.d/mysqld start
-
+endTime=`date +%s`
+((installTime=($endTime-$startTime)/60))
 echo "####################Congratulations########################"
+echo "Total OneinStack Install Time: ${CQUESTION}${installTime}${CEND} minutes"
 [ "${Web_yn}" == 'y' -a "${Nginx_version}" != '4' -a "${Apache_version}" == '3' ] && echo -e "\n$(printf "%-32s" "Nginx install dir":)${CMSG}${web_install_dir}${CEND}"
 [ "${Web_yn}" == 'y' -a "${Nginx_version}" != '4' -a "${Apache_version}" != '3' ] && echo -e "\n$(printf "%-32s" "Nginx install dir":)${CMSG}${web_install_dir}${CEND}\n$(printf "%-32s" "Apache install  dir":)${CMSG}${apache_install_dir}${CEND}"
 [ "${Web_yn}" == 'y' -a "${Nginx_version}" == '4' -a "${Apache_version}" != '3' ] && echo -e "\n$(printf "%-32s" "Apache install dir":)${CMSG}${apache_install_dir}${CEND}"
