@@ -54,6 +54,16 @@ if [ -e "/etc/ssh/sshd_config" ]; then
   fi
 fi
 
+# check iptables
+while :; do echo
+  read -p "Do you want to enable iptables? [y/n]: " iptables_yn
+  if [[ ! $iptables_yn =~ ^[y,n]$ ]]; then
+    echo "${CWARNING}input error! Please only input 'y' or 'n'${CEND}"
+  else
+    break
+  fi
+done
+
 # check Web server
 while :; do echo
   read -p "Do you want to install Web server? [y/n]: " Web_yn
@@ -169,23 +179,24 @@ while :; do echo
         echo -e "\t${CMSG} 1${CEND}. Install MySQL-5.7"
         echo -e "\t${CMSG} 2${CEND}. Install MySQL-5.6"
         echo -e "\t${CMSG} 3${CEND}. Install MySQL-5.5"
-        echo -e "\t${CMSG} 4${CEND}. Install MariaDB-10.1"
-        echo -e "\t${CMSG} 5${CEND}. Install MariaDB-10.0"
-        echo -e "\t${CMSG} 6${CEND}. Install MariaDB-5.5"
-        echo -e "\t${CMSG} 7${CEND}. Install Percona-5.7"
-        echo -e "\t${CMSG} 8${CEND}. Install Percona-5.6"
-        echo -e "\t${CMSG} 9${CEND}. Install Percona-5.5"
-        echo -e "\t${CMSG}10${CEND}. Install AliSQL-5.6"
+        echo -e "\t${CMSG} 4${CEND}. Install MariaDB-10.2"
+        echo -e "\t${CMSG} 5${CEND}. Install MariaDB-10.1"
+        echo -e "\t${CMSG} 6${CEND}. Install MariaDB-10.0"
+        echo -e "\t${CMSG} 7${CEND}. Install MariaDB-5.5"
+        echo -e "\t${CMSG} 8${CEND}. Install Percona-5.7"
+        echo -e "\t${CMSG} 9${CEND}. Install Percona-5.6"
+        echo -e "\t${CMSG}10${CEND}. Install Percona-5.5"
+        echo -e "\t${CMSG}11${CEND}. Install AliSQL-5.6"
         read -p "Please input a number:(Default 2 press Enter) " DB_version
         [ -z "$DB_version" ] && DB_version=2
-        if [ ${DB_version} -ge 1 >/dev/null 2>&1 -a ${DB_version} -le 10 >/dev/null 2>&1 ]; then
+        if [ ${DB_version} -ge 1 >/dev/null 2>&1 -a ${DB_version} -le 11 >/dev/null 2>&1 ]; then
           while :; do
             read -p "Please input the root password of database: " dbrootpwd
             [ -n "`echo $dbrootpwd | grep '[+|&]'`" ] && { echo "${CWARNING}input error,not contain a plus sign (+) and & ${CEND}"; continue; }
             (( ${#dbrootpwd} >= 5 )) && sed -i "s+^dbrootpwd.*+dbrootpwd='$dbrootpwd'+" ./options.conf && break || echo "${CWARNING}database root password least 5 characters! ${CEND}"
           done
           # choose install methods
-          if [[ $DB_version =~ ^[1-9]$ ]]; then
+          if [ ${DB_version} -ge 1 >/dev/null 2>&1 -a ${DB_version} -le 10 >/dev/null 2>&1 ]; then
             while :; do echo
               echo "Please choose installation of the database:"
               echo -e "\t${CMSG}1${CEND}. Install database from binary package."
@@ -201,7 +212,7 @@ while :; do echo
           fi
           break
         else
-          echo "${CWARNING}input error! Please only input number 1,2,3,4,5,6,7,8,9,10${CEND}"
+          echo "${CWARNING}input error! Please only input number 1~11${CEND}"
         fi
       done
     fi
@@ -499,11 +510,7 @@ fi
 
 # openSSL 
 . ./include/openssl.sh
-if [ "$Debian_version" == '8' -o "$Ubuntu_version" == '16' ] && [ "$PHP_version" == '1' ]; then
-  # Problem building php-5.3 with openssl
-  Install_openSSL100 | tee -a $oneinstack_dir/install.log
-fi
-if [[ $Tomcat_version =~ ^[1-3]$ ]] || [ "$DB_yn" == 'y' -a "$Apache_version" == '1' ]; then
+if [[ $Tomcat_version =~ ^[1-3]$ ]] || [[ $Apache_version =~ ^[1-2]$ ]] || [[ $PHP_version =~ ^[1-6]$ ]]; then
   Install_openSSL102 | tee -a $oneinstack_dir/install.log
 fi
 
@@ -530,18 +537,26 @@ case "${DB_version}" in
       . include/boost.sh
       installBoost 2>&1 | tee -a ${oneinstack_dir}/install.log
     fi
+    . include/mariadb-10.2.sh
+    Install_MariaDB102 2>&1 | tee -a ${oneinstack_dir}/install.log
+    ;;
+  5)
+    if [ "${dbInstallMethods}" == "2" ]; then
+      . include/boost.sh
+      installBoost 2>&1 | tee -a ${oneinstack_dir}/install.log
+    fi
     . include/mariadb-10.1.sh
     Install_MariaDB101 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  5)
+  6)
     . include/mariadb-10.0.sh
     Install_MariaDB100 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  6)
+  7)
     . include/mariadb-5.5.sh
     Install_MariaDB55 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  7)
+  8)
     if [ "${dbInstallMethods}" == "2" ]; then
       . include/boost.sh
       installBoost 2>&1 | tee -a ${oneinstack_dir}/install.log
@@ -549,15 +564,15 @@ case "${DB_version}" in
     . include/percona-5.7.sh
     Install_Percona57 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  8)
+  9)
     . include/percona-5.6.sh
     Install_Percona56 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  9)
+  10)
     . include/percona-5.5.sh
     Install_Percona55 2>&1 | tee -a ${oneinstack_dir}/install.log
     ;;
-  10)
+  11)
     . include/alisql-5.6.sh
     Install_AliSQL56 2>&1 | tee -a $oneinstack_dir/install.log
     ;;
