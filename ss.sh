@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://blog.linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 5+ Debian 6+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
 #        Install SS Server
 #
 # Project home page:
@@ -105,7 +105,7 @@ Def_parameter() {
     done
     AddUser_SS
     Iptables_set
-    pkgList="wget unzip openssl-devel gcc swig autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel git asciidoc xmlto pcre-devel mbedtls-devel udns-devel libev-devel"
+    pkgList="wget unzip openssl-devel gcc swig autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel git asciidoc xmlto pcre-devel mbedtls-devel udns-devel libev-devel libsodium"
     for Package in ${pkgList}; do
       yum -y install ${Package}
     done
