@@ -36,7 +36,7 @@ Install_Apache24() {
   [ ! -d "${apache_install_dir}" ] && mkdir -p ${apache_install_dir}
   /bin/cp -R ../apr-${apr_version} ./srclib/apr
   /bin/cp -R ../apr-util-${apr_util_version} ./srclib/apr-util
-  LDFLAGS=-ldl LD_LIBRARY_PATH=${openssl_install_dir}/lib ./configure --prefix=${apache_install_dir} --with-mpm=prefork --with-included-apr --enable-headers --enable-deflate --enable-so --enable-dav --enable-rewrite --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local --enable-expires --enable-static-support --enable-suexec --enable-modules=all --enable-mods-shared=all
+  LDFLAGS=-ldl LD_LIBRARY_PATH=${openssl_install_dir}/lib ./configure --prefix=${apache_install_dir} --enable-mpms-shared=all --with-included-apr --enable-headers --enable-deflate --enable-so --enable-dav --enable-rewrite --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local --enable-expires --enable-static-support --enable-suexec --enable-modules=all --enable-mods-shared=all
   make -j ${THREAD} && make install
   unset LDFLAGS
   if [ -e "${apache_install_dir}/conf/httpd.conf" ]; then
@@ -53,6 +53,7 @@ Install_Apache24() {
   [ -n "`grep ^'export PATH=' /etc/profile`" -a -z "`grep ${apache_install_dir} /etc/profile`" ] && sed -i "s@^export PATH=\(.*\)@export PATH=${apache_install_dir}/bin:\1@" /etc/profile
   . /etc/profile
   
+  sed -i "s@^export LD_LIBRARY_PATH.*@export LD_LIBRARY_PATH=${openssl_install_dir}/lib:\$LD_LIBRARY_PATH@" ${apache_install_dir}/bin/envvars
   /bin/cp ${apache_install_dir}/bin/apachectl /etc/init.d/httpd
   sed -i '2a # chkconfig: - 85 15' /etc/init.d/httpd
   sed -i '3a # description: Apache is a World Wide Web server. It is used to serve' /etc/init.d/httpd
@@ -103,7 +104,7 @@ EOF
   mkdir ${apache_install_dir}/conf/vhost
   cat > ${apache_install_dir}/conf/vhost/0.conf << EOF
 <VirtualHost *:$TMP_PORT>
-  ServerAdmin admin@linuxeye.com
+  ServerAdmin admin@example.com
   DocumentRoot "$wwwroot_dir/default"
   ServerName 127.0.0.1 
   ErrorLog "$wwwlogs_dir/error_apache.log"

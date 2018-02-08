@@ -23,6 +23,7 @@ sed -i "s@^oneinstack_dir.*@oneinstack_dir=$(pwd)@" ./options.conf
 . ./options.conf
 . ./versions.txt
 . ./include/color.sh
+. ./include/check_os.sh
 . ./include/check_dir.sh
 . ./include/download.sh
 . ./include/python.sh
@@ -32,27 +33,26 @@ sed -i "s@^oneinstack_dir.*@oneinstack_dir=$(pwd)@" ./options.conf
 
 while :; do echo
   echo 'Please select your backup destination:'
-  echo -e "\t${CMSG}1${CEND}. Only Localhost"
-  echo -e "\t${CMSG}2${CEND}. Only Remote host"
-  echo -e "\t${CMSG}3${CEND}. Only Qcloud COS"
-  echo -e "\t${CMSG}4${CEND}. Localhost and Remote host"
-  echo -e "\t${CMSG}5${CEND}. Localhost and Qcloud COS"
-  echo -e "\t${CMSG}6${CEND}. Remote host and Qcloud COS"
+  echo -e "\t${CMSG}1${CEND}. Localhost"
+  echo -e "\t${CMSG}2${CEND}. Remote host"
+  echo -e "\t${CMSG}3${CEND}. Qcloud COS"
+  echo -e "\t${CMSG}4${CEND}. UPYUN(又拍云)" 
   read -p "Please input a number:(Default 1 press Enter) " DESC_BK
   [ -z "$DESC_BK" ] && DESC_BK=1
-  if [[ ! $DESC_BK =~ ^[1-6]$ ]]; then
-    echo "${CWARNING}input error! Please only input number 1,2,3,4,5,6${CEND}"
-  else
+  ary=(1 2 3 4 12 13 14 23 24 34 123 124 234 1234)
+  if [[ "${ary[@]}" =~ "$DESC_BK" ]]; then
     break
+  else
+    echo "${CWARNING}input error! Please only input number 1,2,12,23,234 and so on${CEND}"
   fi
 done
 
-[ "$DESC_BK" == '1' ] && sed -i 's@^backup_destination=.*@backup_destination=local@' ./options.conf
-[ "$DESC_BK" == '2' ] && sed -i 's@^backup_destination=.*@backup_destination=remote@' ./options.conf
-[ "$DESC_BK" == '3' ] && sed -i 's@^backup_destination=.*@backup_destination=cos@' ./options.conf
-[ "$DESC_BK" == '4' ] && sed -i 's@^backup_destination=.*@backup_destination=local,remote@' ./options.conf
-[ "$DESC_BK" == '5' ] && sed -i 's@^backup_destination=.*@backup_destination=local,cos@' ./options.conf
-[ "$DESC_BK" == '6' ] && sed -i 's@^backup_destination=.*@backup_destination=Remote,cos@' ./options.conf
+sed -i 's@^backup_destination=.*@backup_destination=@' ./options.conf
+[ `echo $DESC_BK | grep -e 1` ] && sed -i 's@^backup_destination=.*@backup_destination=local@' ./options.conf
+[ `echo $DESC_BK | grep -e 2` ] && sed -i 's@^backup_destination=.*@&,remote@' ./options.conf
+[ `echo $DESC_BK | grep -e 3` ] && sed -i 's@^backup_destination=.*@&,cos@' ./options.conf
+[ `echo $DESC_BK | grep -e 4` ] && sed -i 's@^backup_destination=.*@&,upyun@' ./options.conf
+sed -i 's@^backup_destination=,@backup_destination=@' ./options.conf
 
 while :; do echo
   echo 'Please select your backup content:'
@@ -62,7 +62,7 @@ while :; do echo
   read -p "Please input a number:(Default 1 press Enter) " CONTENT_BK
   [ -z "$CONTENT_BK" ] && CONTENT_BK=1
   if [[ ! $CONTENT_BK =~ ^[1-3]$ ]]; then
-    echo "${CWARNING}input error! Please only input number 1,2,3${CEND}"
+    echo "${CWARNING}input error! Please only input number 1~3${CEND}"
   else
     break
   fi
@@ -72,7 +72,7 @@ done
 [ "$CONTENT_BK" == '2' ] && sed -i 's@^backup_content=.*@backup_content=web@' ./options.conf
 [ "$CONTENT_BK" == '3' ] && sed -i 's@^backup_content=.*@backup_content=db,web@' ./options.conf
 
-if [ "$DESC_BK" != '3' ]; then
+if [[ $DESC_BK =~ ^[1,2]$ ]]; then
   while :; do echo
     echo "Please enter the directory for save the backup file: "
     read -p "(Default directory: $backup_dir): " NEW_backup_dir
@@ -133,7 +133,7 @@ echo "You have to backup the content:"
 [ "$CONTENT_BK" != '2' ] && echo "Database: ${CMSG}$db_name${CEND}"
 [ "$CONTENT_BK" != '1' ] && echo "Website: ${CMSG}$website_name${CEND}"
 
-if [[ "$DESC_BK" =~ ^[2,4,6]$ ]]; then
+if [ `echo $DESC_BK | grep -e 2` ]; then
   > tools/iplist.txt
   while :; do echo
     read -p "Please enter the remote host ip: " remote_ip
@@ -155,7 +155,7 @@ if [[ "$DESC_BK" =~ ^[2,4,6]$ ]]; then
       [ -z "`grep $remote_ip tools/iplist.txt`" ] && echo "$remote_ip $remote_port $remote_user $remote_password" >> tools/iplist.txt || echo "${CWARNING}$remote_ip has been added! ${CEND}"
       while :; do
         read -p "Do you want to add more host ? [y/n]: " more_host_yn
-        if [ "$more_host_yn" != 'y' -a "$more_host_yn" != 'n' ]; then
+        if [[ ! $more_host_yn =~ ^[y,n]$ ]]; then
           echo "${CWARNING}input error! Please only input 'y' or 'n'${CEND}"
         else
           break
@@ -166,11 +166,9 @@ if [[ "$DESC_BK" =~ ^[2,4,6]$ ]]; then
   done
 fi
 
-if [[ "$DESC_BK" =~ ^[3,5,6]$ ]]; then
+if [ `echo $DESC_BK | grep -e 3` ]; then
   [ ! -e "${python_install_dir}/bin/python" ] && Install_Python
   [ ! -e "${python_install_dir}/lib/coscmd" ] && ${python_install_dir}/bin/pip install coscmd >/dev/null 2>&1 
-  sed -i "/if query_yes_no/{ n; s/^.*/#&/; }" ${python_install_dir}/lib/python2.7/site-packages/coscmd/cos_client.py
-  sed -i "s/if query_yes_no/#if query_yes_no/" ${python_install_dir}/lib/python2.7/site-packages/coscmd/cos_client.py
   while :; do echo
     echo 'Please select your backup datacenter:'
     echo -e "\t ${CMSG}1${CEND}. 北京一区(华北)  ${CMSG}2${CEND}. 北京"
@@ -196,26 +194,57 @@ if [[ "$DESC_BK" =~ ^[3,5,6]$ ]]; then
   [ "$Location" == '8' ] && region='na-toronto'
   [ "$Location" == '9' ] && region='eu-frankfurt'
   while :; do echo
-    read -p "Please enter the Qcloud COS appid: " appid 
+    read -p "Please enter the Qcloud COS APPID: " appid 
     [ -z "$appid" ] && continue
     echo
-    read -p "Please enter the Qcloud COS secret id: " secret_id
-    [ -z "$secret_id" ] && continue
+    read -p "Please enter the Qcloud COS SecretId: " SecretId
+    [ -z "$SecretId" ] && continue
     echo
-    read -p "Please enter the Qcloud COS secret key: " secret_key
-    [ -z "$secret_key" ] && continue
+    read -p "Please enter the Qcloud COS SecretKey: " SecretKey
+    [ -z "$SecretKey" ] && continue
     echo
     read -p "Please enter the Qcloud COS bucket: " bucket 
     [ -z "$bucket" ] && continue
     echo
-    $python_install_dir/bin/coscmd config -u $appid -a $secret_id -s $secret_key -r $region -b $bucket >/dev/null 2>&1
-    $python_install_dir/bin/coscmd delete oneinstack.test >/dev/null 2>&1
+    $python_install_dir/bin/coscmd config -u $appid -a $SecretId -s $SecretKey -r $region -b $bucket >/dev/null 2>&1
+    $python_install_dir/bin/coscmd list >/dev/null 2>&1
     if [ $? = 0 ];then
-      echo "${CMSG}appid/secret_id/secret_key/region/bucket OK${CEND}"
+      echo "${CMSG}appid/SecretId/SecretKey/region/bucket OK${CEND}"
       echo
       break
     else
-      echo "${CWARNING}input error! appid/secret_id/secret_key/region/bucket invalid${CEND}"
+      echo "${CWARNING}input error! appid/SecretId/SecretKey/region/bucket invalid${CEND}"
+    fi
+  done
+fi
+
+if [ `echo $DESC_BK | grep -e 4` ]; then
+  if [ ! -e "/usr/local/bin/upx" ] ;then
+    if [ "$OS_BIT" == '64' ]; then
+      wget -qc http://collection.b0.upaiyun.com/softwares/upx/upx-linux-amd64-v0.2.3 -O /usr/local/bin/upx
+    elif [ "$OS_BIT" == '32' ]; then
+      wget -qc http://collection.b0.upaiyun.com/softwares/upx/upx-linux-386-v0.2.3 -O /usr/local/bin/upx
+    fi
+    chmod +x /usr/local/bin/upx
+  fi
+  while :; do echo
+    read -p "Please enter the ServiceName: " ServiceName 
+    [ -z "$ServiceName" ] && continue
+    echo
+    read -p "Please enter the Operator: " Operator 
+    [ -z "$Operator" ] && continue
+    echo
+    read -p "Please enter the Password: " Password 
+    [ -z "$Password" ] && continue
+    echo
+    /usr/local/bin/upx login $ServiceName $Operator $Password >/dev/null 2>&1
+    /usr/local/bin/upx ls >/dev/null 2>&1
+    if [ $? = 0 ];then
+      echo "${CMSG}ServiceName/Operator/Password OK${CEND}"
+      echo
+      break
+    else
+      echo "${CWARNING}input error! ServiceName/Operator/Password invalid${CEND}"
     fi
   done
 fi
