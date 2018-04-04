@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.com
+# BLOG:  https://blog.linuxeye.cn
 #
 # Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
 #        Install SS Server
@@ -9,7 +9,7 @@
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
-export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
@@ -18,11 +18,11 @@ printf "
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
+# Check if user is root
+[ $(id -u) != '0' ] && { echo "${CFAILURE}Error: You must be root to run this script${CEND}"; exit 1; }
 
-# get pwd
-sed -i "s@^oneinstack_dir.*@oneinstack_dir=$(pwd)@" ./options.conf
-
-pushd src > /dev/null
+oneinstack_dir=$(dirname "`readlink -f $0`")
+pushd ${oneinstack_dir}/src > /dev/null
 . ../options.conf
 . ../versions.txt
 . ../include/color.sh
@@ -30,16 +30,13 @@ pushd src > /dev/null
 . ../include/download.sh
 . ../include/python.sh
 
-# Check if user is root
-[ $(id -u) != '0' ] && { echo "${CFAILURE}Error: You must be root to run this script${CEND}"; exit 1; }
-
 PUBLIC_IPADDR=$(../include/get_public_ipaddr.py)
 
-[ "${CentOS_RHEL_version}" == '5' ] && { echo "${CWARNING}SS only support CentOS6,7 or Debian or Ubuntu! ${CEND}"; exit 1; }
+[ "${CentOS_ver}" == '5' ] && { echo "${CWARNING}SS only support CentOS6,7 or Debian or Ubuntu! ${CEND}"; exit 1; }
 
 Check_SS() {
-  [ -f /usr/local/bin/ss-server ] && SS_version=1
-  [ -f ${python_install_dir}/bin/ssserver ] && SS_version=2
+  [ -f /usr/local/bin/ss-server ] && ss_option=1
+  [ -f ${python_install_dir}/bin/ssserver ] && ss_option=2
 }
 
 AddUser_SS() {
@@ -94,9 +91,9 @@ Def_parameter() {
     echo "Please select SS server version:"
     echo -e "\t${CMSG}1${CEND}. Install SS-libev"
     echo -e "\t${CMSG}2${CEND}. Install SS-python"
-    read -p "Please input a number:(Default 1 press Enter) " SS_version
-    [ -z "${SS_version}" ] && SS_version=1
-    if [[ ! "${SS_version}" =~ ^[1-2]$ ]]; then
+    read -p "Please input a number:(Default 1 press Enter) " ss_option
+    [ -z "${ss_option}" ] && ss_option=1
+    if [[ ! "${ss_option}" =~ ^[1-2]$ ]]; then
       echo "${CWARNING}input error! Please only input number 1~2${CEND}"
     else
       break
@@ -105,13 +102,13 @@ Def_parameter() {
   AddUser_SS
   Iptables_set
   if [ "${OS}" == "CentOS" ]; then
-    pkgList="wget unzip openssl-devel gcc swig autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel git asciidoc xmlto c-ares-devel pcre-devel mbedtls-devel udns-devel libev-devel libsodium"
+    pkgList="wget unzip openssl-devel gcc swig autoconf libtool libevent automake make curl curl-devel zlib-devel perl perl-devel cpio expat-devel gettext-devel git asciidoc xmlto c-ares-devel pcre-devel udns-devel libev-devel"
     for Package in ${pkgList}; do
       yum -y install ${Package}
     done
   elif [[ "${OS}" =~ ^Ubuntu$|^Debian$ ]]; then
     apt-get -y update
-    pkgList="curl wget unzip gcc swig automake make perl cpio git libmbedtls-dev libudns-dev libev-dev gettext build-essential autoconf libtool libpcre3-dev asciidoc xmlto libc-ares-dev libsodium-dev"
+    pkgList="curl wget unzip gcc swig automake make perl cpio git libudns-dev libev-dev gettext build-essential autoconf libtool libpcre3-dev asciidoc xmlto libc-ares-dev"
     for Package in ${pkgList}; do
       apt-get -y install $Package
     done
@@ -124,7 +121,7 @@ Install_SS-python() {
   ${python_install_dir}/bin/pip install greenlet
   ${python_install_dir}/bin/pip install gevent
   ${python_install_dir}/bin/pip install shadowsocks
-  if [ -f ${python_install_dir}/bin/ssserver ]; then 
+  if [ -f ${python_install_dir}/bin/ssserver ]; then
     /bin/cp ../init.d/SS-python-init /etc/init.d/shadowsocks
     chmod +x /etc/init.d/shadowsocks
     sed -i "s@SS_bin=.*@SS_bin=${python_install_dir}/bin/ssserver@" /etc/init.d/shadowsocks
@@ -138,21 +135,25 @@ Install_SS-python() {
 }
 
 Install_SS-libev() {
-  src_url=http://mirrors.linuxeye.com/oneinstack/src/shadowsocks-libev-3.1.1.tar.gz && Download_src
-  src_url=http://mirrors.linuxeye.com/oneinstack/src/libsodium-1.0.16.tar.gz && Download_src
-  src_url=http://mirrors.linuxeye.com/oneinstack/src/mbedtls-2.6.0-gpl.tgz && Download_src
-  tar xzf shadowsocks-libev-3.1.1.tar.gz
-  tar xzf libsodium-1.0.16.tar.gz
-  tar xzf mbedtls-2.6.0-gpl.tgz 
-  pushd libsodium-1.0.16
-  ./configure
-  make -j ${THREAD} && make install
-  popd
-  pushd mbedtls-2.6.0
+  src_url=http://mirrors.linuxeye.com/oneinstack/src/shadowsocks-libev-3.1.3.tar.gz && Download_src
+  src_url=http://mirrors.linuxeye.com/oneinstack/src/libsodium-${libsodium_ver}.tar.gz && Download_src
+  src_url=http://mirrors.linuxeye.com/oneinstack/src/mbedtls-2.8.0-apache.tgz && Download_src
+  if [ ! -e "/usr/local/lib/libsodium.la" ]; then
+    tar xzf libsodium-${libsodium_ver}.tar.gz
+    pushd libsodium-${libsodium_ver}
+    ./configure
+    make -j ${THREAD} && make install
+    popd
+    rm -rf libsodium-${libsodium_ver}
+  fi
+  tar xzf mbedtls-2.8.0-apache.tgz
+  pushd mbedtls-2.8.0
   make SHARED=1 CFLAGS=-fPIC
   make DESTDIR=/usr install
   popd
-  pushd shadowsocks-libev-3.1.1
+  tar xzf shadowsocks-libev-3.1.3.tar.gz
+  pushd shadowsocks-libev-3.1.3
+  make clean
   ./configure
   make -j ${THREAD} && make install
   popd
@@ -163,7 +164,7 @@ Install_SS-libev() {
       /bin/cp ../init.d/SS-libev-init-CentOS /etc/init.d/shadowsocks
       chkconfig --add shadowsocks
       chkconfig shadowsocks on
-    elif [[ "${OS}" =~ ^Ubuntu$|^Debian$ ]];then
+    elif [[ "${OS}" =~ ^Ubuntu$|^Debian$ ]]; then
       /bin/cp ../init.d/SS-libev-init-Ubuntu /etc/init.d/shadowsocks
       update-rc.d shadowsocks defaults
     fi
@@ -189,7 +190,7 @@ Uninstall_SS() {
     [ "${OS}" == "CentOS" ] && chkconfig --del shadowsocks
     [[ "${OS}" =~ ^Ubuntu$|^Debian$ ]] && update-rc.d -f shadowsocks remove
     rm -rf /etc/shadowsocks /var/run/shadowsocks.pid /etc/init.d/shadowsocks
-    if [ "${SS_version}" == '1' ]; then
+    if [ "${ss_option}" == '1' ]; then
       rm -f /usr/local/bin/{ss-local,ss-tunnel,ss-server,ss-manager,ss-redir}
       rm -f /usr/local/lib/libshadowsocks.*
       rm -f /usr/local/include/shadowsocks.h
@@ -200,7 +201,7 @@ Uninstall_SS() {
       else
         echo "${CFAILURE}SS-libev uninstall failed! ${CEND}"
       fi
-    elif [ "${SS_version}" == '2' ]; then
+    elif [ "${ss_option}" == '2' ]; then
       ${python_install_dir}/bin/pip uninstall -y shadowsocks
       if [ $? -eq 0 ]; then
         echo "${CSUCCESS}SS-python uninstall successful! ${CEND}"
@@ -213,7 +214,7 @@ Uninstall_SS() {
 
 Config_SS() {
   [ ! -d "/etc/shadowsocks" ] && mkdir /etc/shadowsocks
-  [ "${SS_version}" == '1' ] && cat > /etc/shadowsocks/config.json << EOF
+  [ "${ss_option}" == '1' ] && cat > /etc/shadowsocks/config.json << EOF
 {
     "server":"0.0.0.0",
     "server_port":${SS_port},
@@ -225,7 +226,7 @@ Config_SS() {
 }
 EOF
 
-  [ "${SS_version}" == '2' ] && cat > /etc/shadowsocks/config.json << EOF
+  [ "${ss_option}" == '2' ] && cat > /etc/shadowsocks/config.json << EOF
 {
     "server":"0.0.0.0",
     "local_address":"127.0.0.1",
@@ -259,15 +260,15 @@ Your Encryption Method: ${CMSG}aes-256-cfb${CEND}
 case "$1" in
 install)
   Def_parameter
-  [ "${SS_version}" == '1' ] && Install_SS-libev
-  [ "${SS_version}" == '2' ] && Install_SS-python
+  [ "${ss_option}" == '1' ] && Install_SS-libev
+  [ "${ss_option}" == '2' ] && Install_SS-python
   Config_SS
   service shadowsocks start
   Print_User_SS
   ;;
 adduser)
   Check_SS
-  if [ "${SS_version}" == '2' ]; then
+  if [ "${ss_option}" == '2' ]; then
     AddUser_SS
     Iptables_set
     AddUser_Config_SS

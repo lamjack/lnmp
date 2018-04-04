@@ -1,18 +1,18 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.com
+# BLOG:  https://blog.linuxeye.cn
 #
-# Notes: OneinStack for CentOS/RadHat 5+ Debian 6+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RadHat 6+ Debian 6+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
 Install_XCache() {
-  pushd ${oneinstack_dir}/src
+  pushd ${oneinstack_dir}/src > /dev/null
   phpExtensionDir=$(${php_install_dir}/bin/php-config --extension-dir)
-  tar xzf xcache-${xcache_version}.tar.gz
-  pushd xcache-${xcache_version}
+  tar xzf xcache-${xcache_ver}.tar.gz
+  pushd xcache-${xcache_ver}
   ${php_install_dir}/bin/phpize
   ./configure --enable-xcache --enable-xcache-coverager --enable-xcache-optimizer --with-php-config=${php_install_dir}/bin/php-config
   make -j ${THREAD} && make install
@@ -23,13 +23,13 @@ Install_XCache() {
     touch /tmp/xcache;chown ${run_user}.${run_user} /tmp/xcache
     let xcacheCount="${CPU}+1"
     let xcacheSize="${Memory_limit}/2"
-    cat > ${php_install_dir}/etc/php.d/ext-xcache.ini << EOF
+    cat > ${php_install_dir}/etc/php.d/04-xcache.ini << EOF
 [xcache-common]
 extension=xcache.so
 [xcache.admin]
 xcache.admin.enable_auth=On
 xcache.admin.user=admin
-xcache.admin.pass="${xcache_admin_md5_pass}"
+xcache.admin.pass="${xcachepwd_md5}"
 
 [xcache]
 xcache.size=${xcacheSize}M
@@ -61,7 +61,7 @@ xcache.coverager_autostart = On
 xcache.coveragedump_directory = ""
 EOF
     echo "${CSUCCESS}Xcache module installed successfully! ${CEND}"
-    rm -rf xcache-${xcache_version}
+    rm -rf xcache-${xcache_ver}
   else
     echo "${CFAILURE}Xcache module install failed, Please contact the author! ${CEND}"
   fi

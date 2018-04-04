@@ -1,6 +1,6 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.com
+# BLOG:  https://blog.linuxeye.cn
 #
 # Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
 #
@@ -8,7 +8,7 @@
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
-export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
@@ -16,15 +16,16 @@ printf "
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
+# Check if user is root
+[ $(id -u) != '0' ] && { echo "${CFAILURE}Error: You must be root to run this script${CEND}"; exit 1; }
 
+oneinstack_dir=$(dirname "`readlink -f $0`")
+pushd ${oneinstack_dir} > /dev/null
 . ./options.conf
 . ./include/color.sh
 . ./include/check_dir.sh
 . ./include/check_os.sh
 . ./include/get_char.sh
-
-# Check if user is root
-[ $(id -u) != '0' ] && { echo "${CFAILURE}Error: You must be root to run this script${CEND}"; exit 1; }
 
 Usage() {
   printf "
@@ -127,7 +128,7 @@ Choose_env() {
 
   case "${NGX_FLAG}" in
     "php")
-      NGX_CONF=$(echo -e "location ~ [^/]\.php(/|$) {\n    try_files \$uri =404;\n    #fastcgi_pass remote_php_ip:9000;\n    fastcgi_pass unix:/dev/shm/php-cgi.sock;\n    fastcgi_index index.php;\n    include fastcgi.conf;\n  }")
+      NGX_CONF=$(echo -e "location ~ [^/]\.php(/|$) {\n    #fastcgi_pass remote_php_ip:9000;\n    fastcgi_pass unix:/dev/shm/php-cgi.sock;\n    fastcgi_index index.php;\n    include fastcgi.conf;\n  }")
       ;;
     "java")
       NGX_CONF=$(echo -e "location ~ {\n    proxy_pass http://127.0.0.1:8080;\n    include proxy.conf;\n  }")
@@ -139,7 +140,7 @@ Choose_env() {
 }
 
 Create_SSL() {
-  if [ "${Domian_Mode}" == '2' ]; then 
+  if [ "${Domian_Mode}" == '2' ]; then
     printf "
 You are about to be asked to enter information that will be incorporated
 into your certificate request.
@@ -165,26 +166,40 @@ If you enter '.', the field will be left blank.
     [ -z "${SELFSIGNEDSSL_OU}" ] && SELFSIGNEDSSL_OU="IT Dept."
 
     openssl req -new -newkey rsa:2048 -sha256 -nodes -out ${PATH_SSL}/${domain}.csr -keyout ${PATH_SSL}/${domain}.key -subj "/C=${SELFSIGNEDSSL_C}/ST=${SELFSIGNEDSSL_ST}/L=${SELFSIGNEDSSL_L}/O=${SELFSIGNEDSSL_O}/OU=${SELFSIGNEDSSL_OU}/CN=${domain}" > /dev/null 2>&1
-    openssl x509 -req -days 36500 -sha256 -in ${PATH_SSL}/${domain}.csr -signkey ${PATH_SSL}/${domain}.key -out ${PATH_SSL}/${domain}.crt > /dev/null 2>&1   
+    openssl x509 -req -days 36500 -sha256 -in ${PATH_SSL}/${domain}.csr -signkey ${PATH_SSL}/${domain}.key -out ${PATH_SSL}/${domain}.crt > /dev/null 2>&1
   elif [ "${Domian_Mode}" == '3' ]; then
-    while :; do echo
-      read -p "Please enter Administrator Email(example: admin@example.com): " Admin_Email
-      if [ -z "$(echo ${Admin_Email} | grep '.*@.*\..*')" ]; then
-        echo "${CWARNING}Your email address is invalid! ${CEND}"
-      else
-        break
+    echo "${CMSG}More: https://oneinstack.com/faq/letsencrypt${CEND}"
+    if [ "${moredomain}" == "*.${domain}" ]; then
+      while :; do echo
+        read -p "Please enter your DNS provider: " DNS_PRO
+        echo "${CMSG}dp${CEND},${CMSG}cx${CEND},${CMSG}ali${CEND},${CMSG}cf${CEND},${CMSG}aws${CEND},${CMSG}linode${CEND},${CMSG}he${CEND},${CMSG}namesilo${CEND},${CMSG}dgon${CEND},${CMSG}freedns${CEND},${CMSG}gd${CEND},${CMSG}namecom${CEND} and so on."
+        if [ -e ~/.acme.sh/dnsapi/dns_${DNS_PRO}.sh ]; then
+          break
+        else
+          echo "${CWARNING}You DNS api mode is not supported${CEND}"
+        fi
+      done
+      while :; do echo
+        echo "Syntax: export Key1=Value1 ; export Key2=Value1"
+        read -p "Please enter your dnsapi parameters: " DNS_PAR
+        echo
+        eval $DNS_PAR
+        if [ $? == 0 ]; then
+          break
+        else
+          echo "${CWARNING}Syntax error! PS: export Ali_Key=LTq ; export Ali_Secret=0q5E${CEND}"
+        fi
+      done
+      ~/.acme.sh/acme.sh --issue --dns dns_${DNS_PRO} -d ${domain} -d ${moredomain}
+    else 
+      if [ "${nginx_ssl_flag}" == 'y' ]; then
+        [ ! -d ${web_install_dir}/conf/vhost ] && mkdir ${web_install_dir}/conf/vhost
+        echo "server {  server_name ${domain}${moredomainame};  root ${vhostdir};  access_log off; }" > ${web_install_dir}/conf/vhost/${domain}.conf
+        ${web_install_dir}/sbin/nginx -s reload
       fi
-    done
-
-    [ "${moredomainame_flag}" == 'y' ] && moredomainame_D="$(for D in ${moredomainame}; do echo -d ${D}; done)"
-    if [ "${nginx_ssl_flag}" == 'y' ]; then 
-      [ ! -d ${web_install_dir}/conf/vhost ] && mkdir ${web_install_dir}/conf/vhost
-      echo "server {  server_name ${domain}${moredomainame};  root ${vhostdir};  access_log off; }" > ${web_install_dir}/conf/vhost/${domain}.conf
-      ${web_install_dir}/sbin/nginx -s reload
-    fi
-    if [ "${apache_ssl_flag}" == 'y' ]; then
-      [ ! -d ${apache_install_dir}/conf/vhost ] && mkdir ${apache_install_dir}/conf/vhost
-      cat > ${apache_install_dir}/conf/vhost/${domain}.conf << EOF
+      if [ "${apache_ssl_flag}" == 'y' ]; then 
+        [ ! -d ${apache_install_dir}/conf/vhost ] && mkdir ${apache_install_dir}/conf/vhost
+        cat > ${apache_install_dir}/conf/vhost/${domain}.conf << EOF
 <VirtualHost *:80>
   ServerAdmin admin@example.com
   DocumentRoot "${vhostdir}"
@@ -201,23 +216,29 @@ If you enter '.', the field will be left blank.
 </Directory>
 </VirtualHost>
 EOF
-      /etc/init.d/httpd restart > /dev/null
-    fi
-
-    ${python_install_dir}/bin/certbot certonly --webroot --agree-tos --quiet --email ${Admin_Email} -w ${vhostdir} -d ${domain} ${moredomainame_D}
-    if [ -s "/etc/letsencrypt/live/${domain}/cert.pem" ]; then
-      [ -e "${PATH_SSL}/${domain}.crt" ] && rm -rf ${PATH_SSL}/${domain}.{crt,key}
-      ln -s /etc/letsencrypt/live/${domain}/fullchain.pem ${PATH_SSL}/${domain}.crt
-      ln -s /etc/letsencrypt/live/${domain}/privkey.pem ${PATH_SSL}/${domain}.key
-      if [ -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
-        Cron_Command="/etc/init.d/nginx reload;/etc/init.d/httpd graceful"
-      elif [ -e "${web_install_dir}/sbin/nginx" -a ! -e "${apache_install_dir}/conf/httpd.conf" ]; then
-        Cron_Command="/etc/init.d/nginx reload"
-      elif [ ! -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
-        Cron_Command="/etc/init.d/httpd graceful"
+        /etc/init.d/httpd restart > /dev/null
       fi
-      [ "${OS}" == "CentOS" ] && Cron_file=/var/spool/cron/root || Cron_file=/var/spool/cron/crontabs/root
-      [ -z "$(grep 'certbot renew' ${Cron_file})" ] && echo "30 2 * * 1 ${python_install_dir}/bin/certbot renew --disable-hook-validation --force-renew --renew-hook \"${Cron_Command}\"" >> $Cron_file
+      auth_file="`< /dev/urandom tr -dc A-Za-z0-9 | head -c8`".html
+      auth_str='oneinstack'; echo ${auth_str} > ${vhostdir}/${auth_file}
+      for D in ${domain} ${moredomainame}
+      do
+        curl_str=`curl --connect-timeout 30 -4 -s $D/${auth_file} 2>&1`
+        [ "${curl_str}" != "${auth_str}" ] && { echo; echo "${CFAILURE}Let's Encrypt Verify error! DNS problem: NXDOMAIN looking up A for ${D}${CEND}"; }
+      done
+      rm -f ${vhostdir}/${auth_file}
+      [ "${moredomainame_flag}" == 'y' ] && moredomainame_D="$(for D in ${moredomainame}; do echo -d ${D}; done)"
+      ~/.acme.sh/acme.sh --issue -d ${domain} ${moredomainame_D} -w ${vhostdir}
+    fi
+    if [ -s ~/.acme.sh/${domain}/fullchain.cer ]; then
+      [ -e "${PATH_SSL}/${domain}.crt" ] && rm -rf ${PATH_SSL}/${domain}.{crt,key}
+      if [ -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
+        Command="/etc/init.d/nginx force-reload;/etc/init.d/httpd graceful"
+      elif [ -e "${web_install_dir}/sbin/nginx" -a ! -e "${apache_install_dir}/conf/httpd.conf" ]; then
+        Command="/etc/init.d/nginx force-reload"
+      elif [ ! -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
+        Command="/etc/init.d/httpd graceful"
+      fi
+      ~/.acme.sh/acme.sh --install-cert -d ${domain} --fullchain-file ${PATH_SSL}/${domain}.crt --key-file ${PATH_SSL}/${domain}.key --reloadcmd "${Command}" > /dev/null
     else
       echo "${CFAILURE}Error: Create Let's Encrypt SSL Certificate failed! ${CEND}"
       exit 1
@@ -231,8 +252,8 @@ Print_ssl() {
     echo "$(printf "%-30s" "SSL Private Key:")${CMSG}${PATH_SSL}/${domain}.key${CEND}"
     echo "$(printf "%-30s" "SSL CSR File:")${CMSG}${PATH_SSL}/${domain}.csr${CEND}"
   elif [ "${Domian_Mode}" == '3' ]; then
-    echo "$(printf "%-30s" "Let's Encrypt SSL Certificate:")${CMSG}/etc/letsencrypt/live/${domain}/fullchain.pem${CEND}"
-    echo "$(printf "%-30s" "SSL Private Key:")${CMSG}/etc/letsencrypt/live/${domain}/privkey.pem${CEND}"
+    echo "$(printf "%-30s" "Let's Encrypt SSL Certificate:")${CMSG}${PATH_SSL}/${domain}.crt${CEND}"
+    echo "$(printf "%-30s" "SSL Private Key:")${CMSG}${PATH_SSL}/${domain}.key${CEND}"
   fi
 }
 
@@ -249,7 +270,15 @@ What Are You Doing?
     if [[ ! "${Domian_Mode}" =~ ^[1-3,q]$ ]]; then
       echo "${CFAILURE}input error! Please only input 1~3 and q${CEND}"
     else
-      [ "${Domian_Mode}" == '3' ] && [ ! -e "${python_install_dir}/bin/certbot" ] && { echo "${CWARNING}You must to install Let's Encrypt client! Try running: ./addons.sh${CEND}"; exit 1; }
+      if [ "${Domian_Mode}" == '3' ] && [ ! -e ~/.acme.sh/acme.sh ]; then
+        pushd ${oneinstack_dir}/src > /dev/null
+        [ ! -e acme.sh-master.tar.gz ] && wget -qc http://mirrors.linuxeye.com/oneinstack/src/acme.sh-master.tar.gz
+        tar xzf acme.sh-master.tar.gz
+        pushd acme.sh-master > /dev/null
+        ./acme.sh --install > /dev/null 2>&1
+        popd > /dev/null
+        popd > /dev/null
+      fi
       if [[ "${Domian_Mode}" =~ ^[2-3]$ ]]; then
         if [ -e "${web_install_dir}/sbin/nginx" ]; then
           nginx_ssl_flag=y
@@ -328,14 +357,6 @@ What Are You Doing?
     Apache_Domain_alias=ServerAlias${moredomainame}
     Tomcat_Domain_alias=$(for D in $(echo ${moredomainame}); do echo "<Alias>${D}</Alias>"; done)
 
-    if [ "${Domian_Mode}" == '3' ]; then
-      PUBLIC_IPADDR=$(./include/get_public_ipaddr.py)
-      for D in ${domain} ${moredomainame}
-      do
-        Domain_IPADDR=$(ping ${D} -c1 2> /dev/null | sed '1{s/[^(]*(//;s/).*//;q}')
-        [ "${PUBLIC_IPADDR%.*}" != "${Domain_IPADDR%.*}" ] && { echo; echo "${CFAILURE}DNS problem: NXDOMAIN looking up A for ${D}${CEND}"; echo; exit 1; }
-      done
-    fi
 
     if [ -e "${web_install_dir}/sbin/nginx" ]; then
       while :; do echo
@@ -346,7 +367,7 @@ What Are You Doing?
           break
         fi
       done
-      [ "${redirect_flag}" == 'y' ] && Nginx_redirect="if (\$host != $domain) {  return 301 \$scheme://${domain}\$request_uri;  }"
+      [ "${redirect_flag}" == 'y' ] && Nginx_redirect="if (\$host != ${domain}) {  return 301 \$scheme://${domain}\$request_uri;  }"
     fi
   fi
 
@@ -422,7 +443,7 @@ Nginx_rewrite() {
   else
     echo
     echo "Please input the rewrite of programme :"
-    echo "${CMSG}wordpress${CEND},${CMSG}opencart${CEND},${CMSG}magento2${CEND},${CMSG}drupal${CEND},${CMSG}joomla${CEND},${CMSG}laravel${CEND},${CMSG}thinkphp${CEND},${CMSG}pathinfo${CEND},${CMSG}discuz${CEND},${CMSG}typecho${CEND},${CMSG}ecshop${CEND} rewrite was exist."
+    echo "${CMSG}wordpress${CEND},${CMSG}opencart${CEND},${CMSG}magento2${CEND},${CMSG}drupal${CEND},${CMSG}joomla${CEND},${CMSG}laravel${CEND},${CMSG}thinkphp${CEND},${CMSG}pathinfo${CEND},${CMSG}discuz${CEND},${CMSG}typecho${CEND},${CMSG}ecshop${CEND},${CMSG}nextcloud${CEND} rewrite was exist."
     read -p "(Default rewrite: other): " rewrite
     if [ "${rewrite}" == "" ]; then
       rewrite="other"
@@ -597,8 +618,8 @@ EOF
       sed -i "s@^  root.*;@&\n  location ~ .*\.(wma|wmv|asf|mp3|mmf|zip|rar|jpg|gif|png|swf|flv|mp4)\$ {@" ${web_install_dir}/conf/vhost/${domain}.conf
     fi
 
-    [ "${redirect_flag}" == 'y' ] && sed -i "s@^  root.*;@&\n  if (\$host != $domain) {  return 301 \$scheme://${domain}\$request_uri;  }@" ${web_install_dir}/conf/vhost/${domain}.conf
-    
+    [ "${redirect_flag}" == 'y' ] && sed -i "s@^  root.*;@&\n  if (\$host != ${domain}) {  return 301 \$scheme://${domain}\$request_uri;  }@" ${web_install_dir}/conf/vhost/${domain}.conf
+
     if [ "${nginx_ssl_flag}" == 'y' ]; then
       sed -i "s@^  listen 80;@&\n  listen ${LISTENOPT};@" ${web_install_dir}/conf/vhost/${domain}.conf
       sed -i "s@^  server_name.*;@&\n  ssl_stapling_verify on;@" ${web_install_dir}/conf/vhost/${domain}.conf
