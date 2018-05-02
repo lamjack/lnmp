@@ -105,7 +105,7 @@ Install_fail2ban() {
     chmod +x /etc/init.d/fail2ban
     update-rc.d fail2ban defaults
   fi
-  [ -z "`grep ^Port /etc/ssh/sshd_config`" ] && now_ssh_port=22 || now_ssh_port=`grep ^Port /etc/ssh/sshd_config | awk '{print $2}'`
+  [ -z "`grep ^Port /etc/ssh/sshd_config`" ] && now_ssh_port=22 || now_ssh_port=`grep ^Port /etc/ssh/sshd_config | awk '{print $2}' | head -1`
   cat > /etc/fail2ban/jail.local << EOF
 [DEFAULT]
 ignoreip = 127.0.0.1/8
@@ -427,9 +427,9 @@ What Are You Doing?
             tar xzf swoole-${swoole_ver}.tgz
             pushd swoole-${swoole_ver}
           else
-            src_url=https://pecl.php.net/get/swoole-1.10.2.tgz && Download_src
-            tar xzf swoole-1.10.2.tgz
-            pushd swoole-1.10.2
+            src_url=https://pecl.php.net/get/swoole-1.10.4.tgz && Download_src
+            tar xzf swoole-1.10.4.tgz
+            pushd swoole-1.10.4
           fi
           ${php_install_dir}/bin/phpize
           ./configure --with-php-config=${php_install_dir}/bin/php-config

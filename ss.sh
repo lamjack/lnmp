@@ -141,7 +141,7 @@ Install_SS-libev() {
   if [ ! -e "/usr/local/lib/libsodium.la" ]; then
     tar xzf libsodium-${libsodium_ver}.tar.gz
     pushd libsodium-${libsodium_ver}
-    ./configure
+    ./configure --disable-dependency-tracking --enable-minimal
     make -j ${THREAD} && make install
     popd
     rm -rf libsodium-${libsodium_ver}
@@ -157,7 +157,7 @@ Install_SS-libev() {
   ./configure
   make -j ${THREAD} && make install
   popd
-  echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf
+  [ -z "`grep /usr/local/lib /etc/ld.so.conf.d/*.conf`" ] && echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf
   ldconfig
   if [ -f /usr/local/bin/ss-server ]; then
     if [ "${OS}" == "CentOS" ]; then

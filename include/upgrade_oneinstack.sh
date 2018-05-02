@@ -11,8 +11,8 @@
 Upgrade_OneinStack() {
   pushd ${oneinstack_dir} > /dev/null
   Latest_OneinStack_MD5=$(curl -s http://mirrors.linuxeye.com/md5sum.txt | grep oneinstack.tar.gz | awk '{print $1}')
-  [ ! -e install.sh ] && install_flag=n 
-  if [ "$oneinstack_md5" != "$Latest_OneinStack_MD5" ]; then
+  [ ! -e install.sh ] && install_flag=n
+  if [ "${oneinstack_md5}" != "${Latest_OneinStack_MD5}" ]; then
     /bin/mv options.conf /tmp
     sed -i '/oneinstack_dir=/d' /tmp/options.conf
     [ -e /tmp/oneinstack.tar.gz ] && rm -rf /tmp/oneinstack.tar.gz

@@ -18,17 +18,18 @@ Install_Apache24() {
   id -u ${run_user} >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin ${run_user}
   tar xzf httpd-${apache24_ver}.tar.gz
-  tar xzf nghttp2-${nghttp2_ver}.tar.gz
   tar xzf apr-${apr_ver}.tar.gz
   tar xzf apr-util-${apr_util_ver}.tar.gz
 
   # install nghttp2
   if [ ! -e "/usr/local/lib/libnghttp2.so" ]; then
+    tar xzf nghttp2-${nghttp2_ver}.tar.gz
     pushd nghttp2-${nghttp2_ver}
     ./configure
     make -j ${THREAD} && make install
     popd
-    echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf; ldconfig
+    [ -z "`grep /usr/local/lib /etc/ld.so.conf.d/*.conf`" ] && echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf
+    ldconfig
     rm -rf nghttp2-${nghttp2_ver}
   fi
 
@@ -37,13 +38,13 @@ Install_Apache24() {
   /bin/cp -R ../apr-${apr_ver} ./srclib/apr
   /bin/cp -R ../apr-util-${apr_util_ver} ./srclib/apr-util
   [[ "${php_option}" =~ ^[1-4]$ ]] && Apache_mpm_arg='--with-mpm=prefork'
-  LDFLAGS=-ldl LD_LIBRARY_PATH=${openssl_install_dir}/lib ./configure --prefix=${apache_install_dir} ${Apache_mpm_arg} --enable-mpms-shared=all --with-included-apr --enable-headers --enable-deflate --enable-so --enable-dav --enable-rewrite --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local --enable-expires --enable-static-support --enable-suexec --enable-modules=all --enable-mods-shared=all
+  LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} ${Apache_mpm_arg} --enable-mpms-shared=all --with-included-apr --enable-headers --enable-deflate --enable-so --enable-dav --enable-rewrite --enable-ssl --with-ssl=${openssl_install_dir} --enable-http2 --with-nghttp2=/usr/local --enable-expires --enable-static-support --enable-suexec --enable-modules=all --enable-mods-shared=all
   make -j ${THREAD} && make install
   unset LDFLAGS
   if [ -e "${apache_install_dir}/conf/httpd.conf" ]; then
     echo "${CSUCCESS}Apache installed successfully! ${CEND}"
-    popd 
-    rm -rf httpd-${apache24_ver}
+    popd
+    rm -rf httpd-${apache24_ver} pcre-${pcre_ver} apr-${apr_ver} apr-util-${apr_util_ver}
   else
     rm -rf ${apache_install_dir}
     echo "${CFAILURE}Apache install failed, Please contact the author! ${CEND}"
@@ -53,15 +54,14 @@ Install_Apache24() {
   [ -z "`grep ^'export PATH=' /etc/profile`" ] && echo "export PATH=${apache_install_dir}/bin:\$PATH" >> /etc/profile
   [ -n "`grep ^'export PATH=' /etc/profile`" -a -z "`grep ${apache_install_dir} /etc/profile`" ] && sed -i "s@^export PATH=\(.*\)@export PATH=${apache_install_dir}/bin:\1@" /etc/profile
   . /etc/profile
-  
-  sed -i "s@^export LD_LIBRARY_PATH.*@export LD_LIBRARY_PATH=${openssl_install_dir}/lib:\$LD_LIBRARY_PATH@" ${apache_install_dir}/bin/envvars
+
   /bin/cp ${apache_install_dir}/bin/apachectl /etc/init.d/httpd
   sed -i '2a # chkconfig: - 85 15' /etc/init.d/httpd
   sed -i '3a # description: Apache is a World Wide Web server. It is used to serve' /etc/init.d/httpd
   chmod +x /etc/init.d/httpd
-  [ "$OS" == 'CentOS' ] && { chkconfig --add httpd; chkconfig httpd on; }
-  [[ $OS =~ ^Ubuntu$|^Debian$ ]] && update-rc.d httpd defaults
-  
+  [ "${OS}" == 'CentOS' ] && { chkconfig --add httpd; chkconfig httpd on; }
+  [[ ${OS} =~ ^Ubuntu$|^Debian$ ]] && update-rc.d httpd defaults
+
   sed -i "s@^User daemon@User ${run_user}@" ${apache_install_dir}/conf/httpd.conf
   sed -i "s@^Group daemon@Group ${run_user}@" ${apache_install_dir}/conf/httpd.conf
   if [ "${nginx_option}" == '4' -a ! -e "${web_install_dir}/sbin/nginx" ]; then
@@ -85,7 +85,7 @@ Install_Apache24() {
   sed -i "s@^DocumentRoot.*@DocumentRoot \"${wwwroot_dir}/default\"@" ${apache_install_dir}/conf/httpd.conf
   sed -i "s@^<Directory \"${apache_install_dir}/htdocs\">@<Directory \"${wwwroot_dir}/default\">@" ${apache_install_dir}/conf/httpd.conf
   sed -i "s@^#Include conf/extra/httpd-mpm.conf@Include conf/extra/httpd-mpm.conf@" ${apache_install_dir}/conf/httpd.conf
-  
+
   #logrotate apache log
   cat > /etc/logrotate.d/apache << EOF
 ${wwwlogs_dir}/*apache.log {
@@ -107,7 +107,7 @@ EOF
 <VirtualHost *:$TMP_PORT>
   ServerAdmin admin@example.com
   DocumentRoot "${wwwroot_dir}/default"
-  ServerName 127.0.0.1 
+  ServerName 127.0.0.1
   ErrorLog "${wwwlogs_dir}/error_apache.log"
   CustomLog "${wwwlogs_dir}/access_apache.log" common
 <Directory "${wwwroot_dir}/default">

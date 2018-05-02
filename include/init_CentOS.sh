@@ -10,7 +10,7 @@
 
 # closed Unnecessary services and remove obsolete rpm package
 [ "${CentOS_ver}" == '7' ] && [ "$(systemctl is-active NetworkManager.service)" == 'active' ] && NM_flag=1
-for Service in $(chkconfig --list | grep 3:on | awk '{print $1}' | grep -vE 'nginx|httpd|tomcat|mysqld|php-fpm|pureftpd|redis-server|memcached|supervisord|aegis|NetworkManager|iptables');do chkconfig --level 3 ${Service} off;done
+for Service in $(chkconfig --list | grep 3:on | awk '{print $1}' | grep -viE 'nginx|httpd|tomcat|mysqld|php-fpm|pureftpd|redis-server|memcached|supervisord|aegis|agentwatch|NetworkManager|iptables|cloud');do chkconfig --level 3 ${Service} off;done
 [ "${NM_flag}" == '1' ] && systemctl enable NetworkManager.service
 for Service in sshd network crond messagebus irqbalance syslog rsyslog;do chkconfig --level 3 ${Service} on;done
 
@@ -43,10 +43,10 @@ EOF
 sed -i '/^# End of file/,$d' /etc/security/limits.conf
 cat >> /etc/security/limits.conf <<EOF
 # End of file
-* soft nproc 65535
-* hard nproc 65535
-* soft nofile 65535
-* hard nofile 65535
+* soft nproc 1000000
+* hard nproc 1000000
+* soft nofile 1000000
+* hard nofile 1000000
 EOF
 
 # /etc/hosts
@@ -71,20 +71,20 @@ echo options nf_conntrack hashsize=131072 > /etc/modprobe.d/nf_conntrack.conf
 # /etc/sysctl.conf
 [ ! -e "/etc/sysctl.conf_bk" ] && /bin/mv /etc/sysctl.conf{,_bk}
 cat > /etc/sysctl.conf << EOF
-fs.file-max=65535
+fs.file-max=1000000
 net.ipv4.tcp_max_tw_buckets = 6000
 net.ipv4.tcp_sack = 1
 net.ipv4.tcp_window_scaling = 1
 net.ipv4.tcp_rmem = 4096 87380 4194304
 net.ipv4.tcp_wmem = 4096 16384 4194304
-net.ipv4.tcp_max_syn_backlog = 16384 
+net.ipv4.tcp_max_syn_backlog = 16384
 net.core.netdev_max_backlog = 32768
 net.core.somaxconn = 32768
 net.core.wmem_default = 8388608
 net.core.rmem_default = 8388608
 net.core.rmem_max = 16777216
 net.core.wmem_max = 16777216
-net.ipv4.tcp_timestamps = 1 
+net.ipv4.tcp_timestamps = 1
 net.ipv4.tcp_fin_timeout = 20
 net.ipv4.tcp_synack_retries = 2
 net.ipv4.tcp_syn_retries = 2
@@ -126,7 +126,7 @@ if [ "${iptables_yn}" == 'y' ]; then
   else
     IPTABLES_STATUS=no
   fi
-  
+
   if [ "$IPTABLES_STATUS" == "no" ]; then
     [ -e "/etc/sysconfig/iptables" ] && /bin/mv /etc/sysconfig/iptables{,_bk}
     cat > /etc/sysconfig/iptables << EOF
@@ -142,12 +142,7 @@ if [ "${iptables_yn}" == 'y' ]; then
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
--A INPUT -p icmp -m limit --limit 1/sec --limit-burst 10 -j ACCEPT
--A INPUT -f -m limit --limit 100/sec --limit-burst 100 -j ACCEPT
--A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j syn-flood
--A INPUT -j REJECT --reject-with icmp-host-prohibited
--A syn-flood -p tcp -m limit --limit 3/sec --limit-burst 6 -j RETURN
--A syn-flood -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
 COMMIT
 EOF
   fi
