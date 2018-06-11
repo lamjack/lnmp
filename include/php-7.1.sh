@@ -53,7 +53,16 @@ Install_PHP71() {
 
   [ -z "`grep /usr/local/lib /etc/ld.so.conf.d/*.conf`" ] && echo '/usr/local/lib' > /etc/ld.so.conf.d/local.conf
   ldconfig
-  [ "$OS" == 'CentOS' ] && { ln -s /usr/local/bin/libmcrypt-config /usr/bin/libmcrypt-config; [ "${OS_BIT}" == '64' ] && ln -s /lib64/libpcre.so.0.0.1 /lib64/libpcre.so.1 || ln -s /lib/libpcre.so.0.0.1 /lib/libpcre.so.1; }
+
+  if [ "$OS" == 'CentOS' ]; then
+    ln -s /usr/local/bin/libmcrypt-config /usr/bin/libmcrypt-config
+    if [ "${OS_BIT}" == '64' ]; then
+      ln -s /lib64/libpcre.so.0.0.1 /lib64/libpcre.so.1
+      ln -s /usr/lib64/libc-client.so /usr/lib/libc-client.so
+    else
+      ln -s /lib/libpcre.so.0.0.1 /lib/libpcre.so.1
+    fi
+  fi
 
   tar xzf mcrypt-$mcrypt_ver.tar.gz
   pushd mcrypt-$mcrypt_ver
@@ -129,6 +138,8 @@ Install_PHP71() {
   sed -i 's@^;realpath_cache_size.*@realpath_cache_size = 2M@' ${php_install_dir}/etc/php.ini
   sed -i 's@^disable_functions.*@disable_functions = passthru,exec,system,chroot,chgrp,chown,shell_exec,proc_open,proc_get_status,ini_alter,ini_restore,dl,openlog,syslog,readlink,symlink,popepassthru,stream_socket_server,fsocket,popen@' ${php_install_dir}/etc/php.ini
   [ -e /usr/sbin/sendmail ] && sed -i 's@^;sendmail_path.*@sendmail_path = /usr/sbin/sendmail -t -i@' ${php_install_dir}/etc/php.ini
+  sed -i "s@^;curl.cainfo.*@curl.cainfo = ${openssl_install_dir}/cert.pem@" ${php_install_dir}/etc/php.ini
+  sed -i "s@^;openssl.cafile.*@openssl.cafile = ${openssl_install_dir}/cert.pem@" ${php_install_dir}/etc/php.ini
 
   [ "${phpcache_option}" == '1' ] && cat > ${php_install_dir}/etc/php.d/02-opcache.ini << EOF
 [opcache]

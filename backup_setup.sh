@@ -36,10 +36,11 @@ while :; do echo
   echo -e "\t${CMSG}2${CEND}. Remote host"
   echo -e "\t${CMSG}3${CEND}. Aliyun OSS"
   echo -e "\t${CMSG}4${CEND}. Qcloud COS"
-  echo -e "\t${CMSG}5${CEND}. UPYUN(又拍云)"
+  echo -e "\t${CMSG}5${CEND}. UPYUN"
+  echo -e "\t${CMSG}6${CEND}. QINIU"
   read -p "Please input a number:(Default 1 press Enter) " desc_bk
   [ -z "${desc_bk}" ] && desc_bk=1
-  ary=(1 2 3 4 5 12 13 14 15 23 24 25 34 35 45 123 124 125 134 135 145 234 235 245 345 1234 1235 2345 12345)
+  ary=(1 2 3 4 5 6 12 13 14 15 16 23 24 25 26 34 35 36 45 46 56 123 124 125 126 134 135 136 145 146 156 234 235 236 245 246 256 345 346 456 1234 1235 1236 2345 2346 3456 12345 12346 13456 23456 123456)
   if [[ "${ary[@]}" =~ "${desc_bk}" ]]; then
     break
   else
@@ -53,6 +54,7 @@ sed -i 's@^backup_destination=.*@backup_destination=@' ./options.conf
 [ `echo ${desc_bk} | grep -e 3` ] && sed -i 's@^backup_destination=.*@&,oss@' ./options.conf
 [ `echo ${desc_bk} | grep -e 4` ] && sed -i 's@^backup_destination=.*@&,cos@' ./options.conf
 [ `echo ${desc_bk} | grep -e 5` ] && sed -i 's@^backup_destination=.*@&,upyun@' ./options.conf
+[ `echo ${desc_bk} | grep -e 6` ] && sed -i 's@^backup_destination=.*@&,qiniu@' ./options.conf
 sed -i 's@^backup_destination=,@backup_destination=@' ./options.conf
 
 while :; do echo
@@ -170,28 +172,29 @@ fi
 if [ `echo ${desc_bk} | grep -e 3` ]; then
   if [ ! -e "/usr/local/bin/ossutil" ]; then
     if [ "${OS_BIT}" == '64' ]; then
-      wget -qc http://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/assets/attach/50452/cn_zh/1516454058701/ossutil64 -O /usr/local/bin/ossutil
+      wget -qc http://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/assets/attach/50452/cn_zh/1524643963683/ossutil64 -O /usr/local/bin/ossutil
     elif [ "${OS_BIT}" == '32' ]; then
-      wget -qc http://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/assets/attach/50452/cn_zh/1516453988016/ossutil32 -O /usr/local/bin/ossutil
+      wget -qc http://docs-aliyun.cn-hangzhou.oss.aliyun-inc.com/assets/attach/50452/cn_zh/1524643908776/ossutil32 -O /usr/local/bin/ossutil
     fi
     chmod +x /usr/local/bin/ossutil
   fi
   while :; do echo
-    echo 'Please select your backup datacenter:'
+    echo 'Please select your backup aliyun datacenter:'
     echo -e "\t ${CMSG}1${CEND}. cn-hangzhou-华东 1 (杭州)         ${CMSG}2${CEND}. cn-shanghai-华东 2 (上海)"
     echo -e "\t ${CMSG}3${CEND}. cn-qingdao-华北 1 (青岛)          ${CMSG}4${CEND}. cn-beijing-华北 2 (北京)"
     echo -e "\t ${CMSG}5${CEND}. cn-zhangjiakou-华北 3 (张家口)    ${CMSG}6${CEND}. cn-huhehaote-华北 5(呼和浩特)"
     echo -e "\t ${CMSG}7${CEND}. cn-shenzhen-华南 1 (深圳)         ${CMSG}8${CEND}. cn-hongkong-香港"
     echo -e "\t ${CMSG}9${CEND}. us-west-美西 1 (硅谷)            ${CMSG}10${CEND}. us-east-美东 1 (弗吉尼亚)"
     echo -e "\t${CMSG}11${CEND}. ap-southeast-亚太东南 1 (新加坡) ${CMSG}12${CEND}. ap-southeast-亚太东南 2 (悉尼)"
-    echo -e "\t${CMSG}13${CEND}. ap-southeast-亚太东南 3 (吉隆坡) ${CMSG}14${CEND}. ap-northeast-亚太东北 1 (日本)"
-    echo -e "\t${CMSG}15${CEND}. eu-central-欧洲中部 1 (法兰克福) ${CMSG}16${CEND}. me-east-中东东部 1 (迪拜)"
+    echo -e "\t${CMSG}13${CEND}. ap-southeast-亚太东南 3 (吉隆坡) ${CMSG}14${CEND}. ap-southeast-亚太东南 5 (雅加达)"
+    echo -e "\t${CMSG}15${CEND}. ap-northeast-亚太东北 1 (日本)   ${CMSG}16${CEND}. ap-south-亚太南部 1 (孟买)"
+    echo -e "\t${CMSG}17${CEND}. eu-central-欧洲中部 1 (法兰克福) ${CMSG}18${CEND}. me-east-中东东部 1 (迪拜)"
     read -p "Please input a number:(Default 1 press Enter) " Location
     [ -z "${Location}" ] && Location=1
-    if [[ "${Location}" =~ ^[1-9]$|^1[0-6]$ ]]; then
+    if [[ "${Location}" =~ ^[1-9]$|^1[0-8]$ ]]; then
       break
     else
-      echo "${CWARNING}input error! Please only input number 1~16${CEND}"
+      echo "${CWARNING}input error! Please only input number 1~18${CEND}"
     fi
   done
   [ "${Location}" == '1' ] && Host=oss-cn-hangzhou-internal.aliyuncs.com
@@ -207,9 +210,11 @@ if [ `echo ${desc_bk} | grep -e 3` ]; then
   [ "${Location}" == '11' ] && Host=oss-ap-southeast-1-internal.aliyuncs.com
   [ "${Location}" == '12' ] && Host=oss-ap-southeast-2-internal.aliyuncs.com
   [ "${Location}" == '13' ] && Host=oss-ap-southeast-3-internal.aliyuncs.com
-  [ "${Location}" == '14' ] && Host=oss-ap-northeast-1-internal.aliyuncs.com
-  [ "${Location}" == '15' ] && Host=oss-eu-central-1-internal.aliyuncs.com
-  [ "${Location}" == '16' ] && Host=oss-me-east-1-internal.aliyuncs.com
+  [ "${Location}" == '14' ] && Host=oss-ap-southeast-5-internal.aliyuncs.com
+  [ "${Location}" == '15' ] && Host=oss-ap-northeast-1-internal.aliyuncs.com
+  [ "${Location}" == '16' ] && Host=oss-ap-south-1-internal.aliyuncs.com
+  [ "${Location}" == '17' ] && Host=oss-eu-central-1-internal.aliyuncs.com
+  [ "${Location}" == '18' ] && Host=oss-me-east-1-internal.aliyuncs.com
   [ "$(./include/check_port.py ${Host} 80)" == "False" ] && Host=`echo ${Host} | sed 's@-internal@@g'`
   [ -e "/root/.ossutilconfig" ] && rm -f /root/.ossutilconfig
   while :; do echo
@@ -235,18 +240,20 @@ if [ `echo ${desc_bk} | grep -e 4` ]; then
   [ ! -e "${python_install_dir}/bin/python" ] && Install_Python
   [ ! -e "${python_install_dir}/lib/coscmd" ] && ${python_install_dir}/bin/pip install coscmd >/dev/null 2>&1
   while :; do echo
-    echo 'Please select your backup datacenter:'
-    echo -e "\t ${CMSG}1${CEND}. 北京一区(华北)  ${CMSG}2${CEND}. 北京"
-    echo -e "\t ${CMSG}3${CEND}. 上海(华东)      ${CMSG}4${CEND}. 广州(华南)"
-    echo -e "\t ${CMSG}5${CEND}. 成都(西南)      ${CMSG}6${CEND}. 新加坡"
-    echo -e "\t ${CMSG}7${CEND}. 香港            ${CMSG}8${CEND}. 多伦多"
-    echo -e "\t ${CMSG}9${CEND}. 法兰克福"
+    echo 'Please select your backup qcloud datacenter:'
+    echo -e "\t ${CMSG} 1${CEND}. 北京一区(华北)  ${CMSG}2${CEND}. 北京"
+    echo -e "\t ${CMSG} 3${CEND}. 上海(华东)      ${CMSG}4${CEND}. 广州(华南)"
+    echo -e "\t ${CMSG} 5${CEND}. 成都(西南)      ${CMSG}6${CEND}. 重庆"
+    echo -e "\t ${CMSG} 7${CEND}. 新加坡          ${CMSG}8${CEND}. 香港"
+    echo -e "\t ${CMSG} 9${CEND}. 多伦多         ${CMSG}10${CEND}. 法兰克福"
+    echo -e "\t ${CMSG}11${CEND}. 孟买           ${CMSG}12${CEND}. 首尔"
+    echo -e "\t ${CMSG}13${CEND}. 硅谷           ${CMSG}14${CEND}. 弗吉尼亚"
     read -p "Please input a number:(Default 1 press Enter) " Location
     [ -z "${Location}" ] && Location=1
-    if [[ "${Location}" =~ ^[1-9]$ ]]; then
+    if [[ "${Location}" =~ ^[1-9]$|^1[0-4]$ ]]; then
       break
     else
-      echo "${CWARNING}input error! Please only input number 1~9${CEND}"
+      echo "${CWARNING}input error! Please only input number 1~14${CEND}"
     fi
   done
   [ "${Location}" == '1' ] && region='ap-beijing-1'
@@ -254,10 +261,15 @@ if [ `echo ${desc_bk} | grep -e 4` ]; then
   [ "${Location}" == '3' ] && region='ap-shanghai'
   [ "${Location}" == '4' ] && region='ap-guangzhou'
   [ "${Location}" == '5' ] && region='ap-chengdu'
-  [ "${Location}" == '6' ] && region='ap-singapore'
-  [ "${Location}" == '7' ] && region='ap-hongkong'
-  [ "${Location}" == '8' ] && region='na-toronto'
-  [ "${Location}" == '9' ] && region='eu-frankfurt'
+  [ "${Location}" == '6' ] && region='ap-chongqing'
+  [ "${Location}" == '7' ] && region='ap-singapore'
+  [ "${Location}" == '8' ] && region='ap-hongkong'
+  [ "${Location}" == '9' ] && region='na-toronto'
+  [ "${Location}" == '10' ] && region='eu-frankfurt'
+  [ "${Location}" == '11' ] && region='ap-mumbai'
+  [ "${Location}" == '12' ] && region='ap-seoul'
+  [ "${Location}" == '13' ] && region='na-siliconvalley'
+  [ "${Location}" == '14' ] && region='na-ashburn'
   while :; do echo
     read -p "Please enter the Qcloud COS APPID: " APPID
     [ -z "${APPID}" ] && continue
@@ -293,13 +305,13 @@ if [ `echo ${desc_bk} | grep -e 5` ]; then
     chmod +x /usr/local/bin/upx
   fi
   while :; do echo
-    read -p "Please enter the ServiceName: " ServiceName
+    read -p "Please enter the upyun ServiceName: " ServiceName
     [ -z "${ServiceName}" ] && continue
     echo
-    read -p "Please enter the Operator: " Operator
+    read -p "Please enter the upyun Operator: " Operator
     [ -z "${Operator}" ] && continue
     echo
-    read -p "Please enter the Password: " Password
+    read -p "Please enter the upyun Password: " Password
     [ -z "${Password}" ] && continue
     echo
     /usr/local/bin/upx login ${ServiceName} ${Operator} ${Password} >/dev/null 2>&1
@@ -309,6 +321,74 @@ if [ `echo ${desc_bk} | grep -e 5` ]; then
       break
     else
       echo "${CWARNING}input error! ServiceName/Operator/Password invalid${CEND}"
+    fi
+  done
+fi
+
+if [ `echo ${desc_bk} | grep -e 6` ]; then
+  if [ ! -e "/usr/local/bin/qrsctl" ]; then
+    if [ "${OS_BIT}" == '64' ]; then
+      wget -qc http://devtools.qiniu.com/linux/amd64/qrsctl -O /usr/local/bin/qrsctl
+    elif [ "${OS_BIT}" == '32' ]; then
+      wget -qc http://devtools.qiniu.com/linux/386/qrsctl -O /usr/local/bin/qrsctl
+    fi
+    chmod +x /usr/local/bin/qrsctl
+  fi
+  if [ ! -e "/usr/local/bin/qshell" ]; then
+    wget -qc http://devtools.qiniu.com/qshell-v2.1.8.zip -O /tmp/qshell-v2.1.8.zip
+    unzip -q /tmp/qshell-v2.1.8.zip -d /tmp/
+    if [ "${OS_BIT}" == '64' ]; then
+      /bin/cp /tmp/qshell-linux-x64 /usr/local/bin/qshell
+    elif [ "${OS_BIT}" == '32' ]; then
+      /bin/cp /tmp/qshell-linux-x86 /usr/local/bin/qshell
+    fi
+    chmod +x /usr/local/bin/qshell
+    rm -f /tmp/qshell*
+  fi
+  while :; do echo
+    echo 'Please select your backup qiniu datacenter:'
+    echo -e "\t ${CMSG} 1${CEND}. 华东            ${CMSG}2${CEND}. 华北"
+    echo -e "\t ${CMSG} 3${CEND}. 华南            ${CMSG}4${CEND}. 北美"
+    echo -e "\t ${CMSG} 5${CEND}. 东南亚" 
+    read -p "Please input a number:(Default 1 press Enter) " Location
+    [ -z "${Location}" ] && Location=1
+    if [[ "${Location}" =~ ^[1-5]$ ]]; then
+      break
+    else
+      echo "${CWARNING}input error! Please only input number 1~5${CEND}"
+    fi
+  done
+  [ "${Location}" == '1' ] && zone='z0'
+  [ "${Location}" == '2' ] && zone='z1'
+  [ "${Location}" == '3' ] && zone='z2'
+  [ "${Location}" == '4' ] && zone='na0'
+  [ "${Location}" == '5' ] && zone='as0'
+  while :; do echo
+    read -p "Please enter the qiniu AccessKey: " AccessKey 
+    [ -z "${AccessKey}" ] && continue
+    echo
+    read -p "Please enter the qiniu SecretKey: " SecretKey 
+    [ -z "${SecretKey}" ] && continue
+    echo
+    read -p "Please enter the qiniu bucket: " bucket
+    [ -z "${bucket}" ] && continue
+    echo
+    /usr/local/bin/qshell account ${AccessKey} ${SecretKey}
+    /usr/local/bin/qrsctl login ${AccessKey} ${SecretKey}
+    if /usr/local/bin/qrsctl bucketinfo ${bucket} > /dev/null 2>&1; then
+      sed -i "s@^qiniu_bucket=.*@qiniu_bucket=${bucket}@" ./options.conf
+      echo "${CMSG}AccessKey/SecretKey OK${CEND}"
+      echo
+      break
+    elif /usr/local/bin/qrsctl mkbucket ${bucket} ${zone} > /dev/null 2>&1; then
+      /usr/local/bin/qrsctl private ${bucket} 1
+      echo "${CMSG}[${bucket}] createbucket OK${CEND}"
+      sed -i "s@^qiniu_bucket=.*@qiniu_bucket=${bucket}@" ./options.conf
+      echo "${CMSG}AccessKey/SecretKey OK${CEND}"
+      echo
+      break
+    else 
+      echo "${CWARNING}input error! AccessKey/SecretKey invalid${CEND}"
     fi
   done
 fi

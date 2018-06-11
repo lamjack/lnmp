@@ -234,10 +234,11 @@ EOF
     fi
     if [ -s ~/.acme.sh/${domain}/fullchain.cer ]; then
       [ -e "${PATH_SSL}/${domain}.crt" ] && rm -rf ${PATH_SSL}/${domain}.{crt,key}
+      [ -e /bin/systemctl -a -e /lib/systemd/system/nginx.service ] && Nginx_cmd='/bin/systemctl restart nginx' || Nginx_cmd='/etc/init.d/nginx force-reload'
       if [ -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
-        Command="/etc/init.d/nginx force-reload;/etc/init.d/httpd graceful"
+        Command="${Nginx_cmd};/etc/init.d/httpd graceful"
       elif [ -e "${web_install_dir}/sbin/nginx" -a ! -e "${apache_install_dir}/conf/httpd.conf" ]; then
-        Command="/etc/init.d/nginx force-reload"
+        Command="${Nginx_cmd}"
       elif [ ! -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/conf/httpd.conf" ]; then
         Command="/etc/init.d/httpd graceful"
       fi
@@ -406,7 +407,7 @@ What Are You Doing?
 Nginx_anti_hotlinking() {
   while :; do echo
     read -p "Do you want to add hotlink protection? [y/n]: " anti_hotlinking_flag
-    if [[ ! $anti_hotlinking_flag =~ ^[y,n]$ ]]; then
+    if [[ ! ${anti_hotlinking_flag} =~ ^[y,n]$ ]]; then
       echo "${CWARNING}input error! Please only input 'y' or 'n'${CEND}"
     else
       break
@@ -420,7 +421,7 @@ Nginx_anti_hotlinking() {
   fi
 
   if [ "${anti_hotlinking_flag}" == 'y' ]; then
-    if [ "${moredomainame_flag}" == 'y' ]; then
+    if [ "${moredomainame_flag}" == 'y' -a "${moredomain}" != "*.${domain}" ]; then
       domain_allow_all=${domain_allow}${moredomainame}
     else
       domain_allow_all=${domain_allow}
