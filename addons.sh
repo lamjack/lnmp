@@ -24,8 +24,8 @@ oneinstack_dir=$(dirname "`readlink -f $0`")
 pushd ${oneinstack_dir} > /dev/null
 
 # get the IP information
-PUBLIC_IPADDR=`./include/get_public_ipaddr.py`
-IPADDR_COUNTRY=`./include/get_ipaddr_state.py $PUBLIC_IPADDR | awk '{print $1}'`
+PUBLIC_IPADDR=$(./include/get_public_ipaddr.py)
+IPADDR_COUNTRY=$(./include/get_ipaddr_state.py $PUBLIC_IPADDR)
 
 . ./versions.txt
 . ./options.conf
@@ -52,6 +52,8 @@ IPADDR_COUNTRY=`./include/get_ipaddr_state.py $PUBLIC_IPADDR | awk '{print $1}'`
 . ./include/redis.sh
 
 . ./include/python.sh
+
+. ./include/ngx_lua_waf.sh
 
 # Check PHP
 if [ -e "${php_install_dir}/bin/phpize" ]; then
@@ -175,11 +177,12 @@ What Are You Doing?
 \t${CMSG} 8${CEND}. Install/Uninstall xdebug PHP Extension
 \t${CMSG} 9${CEND}. Install/Uninstall PHP Composer
 \t${CMSG}10${CEND}. Install/Uninstall fail2ban
+\t${CMSG}11${CEND}. Install/Uninstall ngx_lua_waf 
 \t${CMSG} q${CEND}. Exit
 "
   read -p "Please input the correct option: " Number
-  if [[ ! "${Number}" =~ ^[1-9,q]$|^10$ ]]; then
-    echo "${CFAILURE}input error! Please only input 1~10 and q${CEND}"
+  if [[ ! "${Number}" =~ ^[1-9,q]$|^1[0-1]$ ]]; then
+    echo "${CFAILURE}input error! Please only input 1~11 and q${CEND}"
   else
     case "${Number}" in
       1)
@@ -456,7 +459,7 @@ What Are You Doing?
             pushd swoole-1.10.5
           fi
           ${php_install_dir}/bin/phpize
-          ./configure --with-php-config=${php_install_dir}/bin/php-config
+          ./configure --with-php-config=${php_install_dir}/bin/php-config --enable-openssl --with-openssl-dir=${openssl_install_dir}
           make -j ${THREAD} && make install
           popd
           rm -rf swoole-${swoole_ver}
@@ -544,6 +547,16 @@ EOF
           Install_fail2ban
         else
           Uninstall_fail2ban
+        fi
+        ;;
+      11)
+        ACTION_FUN
+        if [ "${ACTION}" = '1' ]; then
+          [ -e "${nginx_install_dir}/sbin/nginx" ] && Nginx_lua_waf
+          [ -e "${tengine_install_dir}/sbin/nginx" ] && Tengine_lua_waf
+          enable_lua_waf
+        else
+          disable_lua_waf
         fi
         ;;
       q)

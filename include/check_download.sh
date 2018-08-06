@@ -14,7 +14,7 @@ checkDownload() {
   echo "Download openSSL..."
   src_url=https://www.openssl.org/source/openssl-${openssl_ver}.tar.gz && Download_src
   echo "Download cacert.pem..."
-  src_url=http://curl.haxx.se/ca/cacert.pem && Download_src
+  src_url=https://curl.haxx.se/ca/cacert.pem && Download_src
 
   # Web
   if [ "${web_yn}" == 'y' ]; then
@@ -126,7 +126,7 @@ checkDownload() {
 
         if [ "${dbinstallmethod}" == '1' ]; then
           echo "Download MySQL 8.0 binary package..."
-          FILE_NAME=mysql-${mysql80_ver}-linux-glibc2.12-${SYS_BIT_b}.tar.gz
+          FILE_NAME=mysql-${mysql80_ver}-linux-glibc2.12-${SYS_BIT_b}.tar.xz
         elif [ "${dbinstallmethod}" == '2' ]; then
           echo "Download MySQL 8.0 source package..."
           FILE_NAME=mysql-${mysql80_ver}.tar.gz
@@ -791,7 +791,7 @@ checkDownload() {
     src_url=https://launchpad.net/libmemcached/1.0/${libmemcached_ver}/+download/libmemcached-${libmemcached_ver}.tar.gz && Download_src
   fi
 
-  if [[ ${nginx_option} =~ ^[1-3]$ ]] || [ "$db_yn" == 'y' -a "${db_option}" != '10' ]; then
+  if [[ ${nginx_option} =~ ^[1-3]$ ]] || [ "${db_yn}" == 'y' ]; then
     echo "Download jemalloc..."
     src_url=${mirrorLink}/jemalloc-${jemalloc_ver}.tar.bz2 && Download_src
   fi

@@ -1,6 +1,6 @@
 [![PayPal donate button](https://img.shields.io/badge/paypal-donate-green.svg)](https://paypal.me/yeho)[![支付宝捐助按钮](https://img.shields.io/badge/%E6%94%AF%E4%BB%98%E5%AE%9D-%E5%90%91TA%E6%8D%90%E5%8A%A9-green.svg)](https://static.oneinstack.com/images/alipay.png)[![微信捐助按钮](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1-%E5%90%91TA%E6%8D%90%E5%8A%A9-green.svg)](https://static.oneinstack.com/images/weixin.png)
 
-This script is written using the shell, in order to quickly deploy `LEMP`/`LAMP`/`LNMP`/`LNMPA`(Linux, Nginx/Tengine/OpenResty, MySQL in a production environment/MariaDB/Percona, PHP), applicable to CentOS 6~7(including redhat), Debian 6~9, Ubuntu 12~16 of 32 and 64. 
+This script is written using the shell, in order to quickly deploy `LEMP`/`LAMP`/`LNMP`/`LNMPA`(Linux, Nginx/Tengine/OpenResty, MySQL in a production environment/MariaDB/Percona, PHP), applicable to CentOS 6~7(including redhat), Debian 6~9, Ubuntu 12~16, Fedora 27~28 of 32 and 64 
 
 Script properties:
 - Continually updated, Provide Shell Interaction and Autoinstall
@@ -8,7 +8,7 @@ Script properties:
 - Some security optimization
 - Providing a plurality of database versions (MySQL-8.0, MySQL-5.7, MySQL-5.6, MySQL-5.5, MariaDB-10.3, MariaDB-10.2, MariaDB-10.1, MariaDB-10.0, MariaDB-5.5, Percona-5.7, Percona-5.6, Percona-5.5, AliSQL-5.6, PostgreSQL, MongoDB)
 - Providing multiple PHP versions (PHP-7.2, PHP-7.1, PHP-7.0, PHP-5.6, PHP-5.5, PHP-5.4, PHP-5.3)
-- Provide Nginx, Tengine, OpenResty
+- Provide Nginx, Tengine, OpenResty and ngx_lua_waf
 - Providing a plurality of Apache version (Apache-2.4, Apache-2.2)
 - According to their needs to install PHP Cache Accelerator provides ZendOPcache, xcache, apcu, eAccelerator. And php encryption and decryption tool ionCube, ZendGuardLoader, swoole, xdebug, Composer
 - Installation Pureftpd, phpMyAdmin according to their needs
@@ -102,6 +102,9 @@ service php-fpm {start|stop|restart|reload|status}
 ```
 HHVM:
 ```bash
+#centos7
+systemctl {start|stop|status|restart} hhvm
+#centos6
 service supervisord {start|stop|status|restart|reload}
 ```
 Apache:
@@ -137,6 +140,6 @@ service memcached {start|stop|status|restart|reload}
 
 Follow the instructions in [Wiki Installation page](https://github.com/lj2007331/lnmp/wiki/Installation)<br />
 
-For feedback, questions, and to follow the progress of the project (Chinese): <br />
+For feedback, questions, and to follow the progress of the project: <br />
 [Telegram Group](https://t.me/oneinstack)<br />
 [lnmp最新源码一键安装脚本](https://blog.linuxeye.cn/31.html)<br />

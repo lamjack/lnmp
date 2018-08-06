@@ -4,7 +4,7 @@ class Get_public_ip:
   socket.setdefaulttimeout(5)
   def getip(self):
     try:
-      myip = self.visit("http://ip.taobao.com/ipSearch.php")
+      myip = self.visit("http://ip.taobao.com/ipSearch.html")
     except:
       try:
         myip = self.visit("http://ipv4.icanhazip.com/")
@@ -19,4 +19,4 @@ class Get_public_ip:
 
 if __name__ == "__main__":
   getmyip = Get_public_ip()
-  print getmyip.getip()
+  print(getmyip.getip())

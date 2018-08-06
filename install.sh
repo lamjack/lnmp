@@ -30,7 +30,6 @@ pushd ${oneinstack_dir} > /dev/null
 . ./include/get_char.sh
 
 ssh_port=22
-phpcache_option=1
 dbrootpwd=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8`
 dbpostgrespwd=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8`
 dbmongopwd=`< /dev/urandom tr -dc A-Za-z0-9 | head -c8`
@@ -98,10 +97,9 @@ while :; do
       php_option=$2; shift 2
       [[ ! ${php_option} =~ ^[1-7]$ ]] && { echo "${CWARNING}php_option input error! Please only input number 1~7${CEND}"; exit 1; }
       php_yn=y
-      [ -e "${php_install_dir}/bin/phpize" ] && { echo "${CWARNING}PHP already installed! ${CEND}"; php_yn=Other; }
+      [ -e "${php_install_dir}/bin/phpize" ] && { echo "${CWARNING}PHP already installed! ${CEND}"; php_option=Other; }
       ;;
     --phpcache_option)
-      [[ ! ${phpcache_option} =~ ^[1-4]$ ]] && { echo "${CWARNING}phpcache_option input error! Please only input number 1~4${CEND}"; exit 1; }
       phpcache_option=$2; shift 2
       ;;
     --php_extensions)
@@ -125,11 +123,11 @@ while :; do
       db_option=$2; shift 2
       db_yn=y
       if [[ "${db_option}" =~ ^[1-9]$|^1[0-3]$ ]]; then
-        [ -d "${db_install_dir}/support-files" ] && { echo "${CWARNING}MySQL already installed! ${CEND}"; db_yn=Other; }
+        [ -d "${db_install_dir}/support-files" ] && { echo "${CWARNING}MySQL already installed! ${CEND}"; db_option=Other; }
       elif [ "${db_option}" == '14' ]; then
-        [ -e "${pgsql_install_dir}/bin/psql" ] && { echo "${CWARNING}PostgreSQL already installed! ${CEND}"; db_yn=Other; }
+        [ -e "${pgsql_install_dir}/bin/psql" ] && { echo "${CWARNING}PostgreSQL already installed! ${CEND}"; db_option=Other; }
       elif [ "${db_option}" == '15' ]; then
-        [ -e "${mongo_install_dir}/bin/mongo" ] && { echo "${CWARNING}MongoDB already installed! ${CEND}"; db_yn=Other; }
+        [ -e "${mongo_install_dir}/bin/mongo" ] && { echo "${CWARNING}MongoDB already installed! ${CEND}"; db_option=Other; }
       else
         echo "${CWARNING}db_option input error! Please only input number 1~15${CEND}"
         exit 1
@@ -362,11 +360,11 @@ if [ ${ARG_NUM} == 0 ]; then
           [[ "${db_option}" =~ ^5$|^15$ ]] && [ "${OS_BIT}" == '32' ] && { echo "${CWARNING}By not supporting 32-bit! ${CEND}"; continue; }
           if [[ "${db_option}" =~ ^[1-9]$|^1[0-5]$ ]]; then
             if [ "${db_option}" == '14' ]; then
-              [ -e "${pgsql_install_dir}/bin/psql" ] && { echo "${CWARNING}PostgreSQL already installed! ${CEND}"; db_yn=Other; break; }
+              [ -e "${pgsql_install_dir}/bin/psql" ] && { echo "${CWARNING}PostgreSQL already installed! ${CEND}"; db_option=Other; break; }
             elif [ "${db_option}" == '15' ]; then
-              [ -e "${mongo_install_dir}/bin/mongo" ] && { echo "${CWARNING}MongoDB already installed! ${CEND}"; db_yn=Other; break; }
+              [ -e "${mongo_install_dir}/bin/mongo" ] && { echo "${CWARNING}MongoDB already installed! ${CEND}"; db_option=Other; break; }
             else
-              [ -d "${db_install_dir}/support-files" ] && { echo "${CWARNING}MySQL already installed! ${CEND}"; db_yn=Other; break; }
+              [ -d "${db_install_dir}/support-files" ] && { echo "${CWARNING}MySQL already installed! ${CEND}"; db_option=Other; break; }
             fi
             while :; do
               if [ "${db_option}" == '14' ]; then
@@ -426,7 +424,7 @@ if [ ${ARG_NUM} == 0 ]; then
       echo "${CWARNING}input error! Please only input 'y' or 'n'${CEND}"
     else
       if [ "${php_yn}" == 'y' ]; then
-        [ -e "${php_install_dir}/bin/phpize" ] && { echo "${CWARNING}PHP already installed! ${CEND}"; php_yn=Other; break; }
+        [ -e "${php_install_dir}/bin/phpize" ] && { echo "${CWARNING}PHP already installed! ${CEND}"; php_option=Other; break; }
         while :; do echo
           echo 'Please select a version of the PHP:'
           echo -e "\t${CMSG}1${CEND}. Install php-5.3"
@@ -656,10 +654,9 @@ if [ ${ARG_NUM} == 0 ]; then
 fi
 
 # get the IP information
-IPADDR=`./include/get_ipaddr.py`
-PUBLIC_IPADDR=`./include/get_public_ipaddr.py`
-IPADDR_COUNTRY_ISP=`./include/get_ipaddr_state.py $PUBLIC_IPADDR`
-IPADDR_COUNTRY=`echo $IPADDR_COUNTRY_ISP | awk '{print $1}'`
+IPADDR=$(./include/get_ipaddr.py)
+PUBLIC_IPADDR=$(./include/get_public_ipaddr.py)
+IPADDR_COUNTRY=$(./include/get_ipaddr_state.py $PUBLIC_IPADDR)
 
 # Check download source packages
 . ./include/check_download.sh
