@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://blog.linuxeye.cn
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 6+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -18,7 +18,7 @@ Install_Jemalloc() {
     unset LDFLAGS
     popd
     if [ -f "/usr/local/lib/libjemalloc.so" ]; then
-      if [ "${OS_BIT}" == '64' -a "$OS" == 'CentOS' ]; then
+      if [ "${OS_BIT}" == '64' -a "${OS}" == 'CentOS' ]; then
         ln -s /usr/local/lib/libjemalloc.so.2 /usr/lib64/libjemalloc.so.1
       else
         ln -s /usr/local/lib/libjemalloc.so.2 /usr/lib/libjemalloc.so.1

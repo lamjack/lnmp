@@ -2,12 +2,14 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://blog.linuxeye.cn
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 6+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
 #       https://github.com/lj2007331/oneinstack
 
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US:en
 Mem=`free -m | awk '/Mem:/{print $2}'`
 Swap=`free -m | awk '/Swap:/{print $2}'`
 
