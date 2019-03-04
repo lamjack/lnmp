@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_PostgreSQL() {
   pushd ${oneinstack_dir}/src > /dev/null
@@ -20,12 +20,19 @@ Install_PostgreSQL() {
   make install
   chmod 755 ${pgsql_install_dir}
   chown -R postgres.postgres ${pgsql_install_dir}
-  /bin/cp ./contrib/start-scripts/linux /etc/init.d/postgresql
-  sed -i "s@^prefix=.*@prefix=${pgsql_install_dir}@" /etc/init.d/postgresql
-  sed -i "s@^PGDATA=.*@PGDATA=${pgsql_data_dir}@" /etc/init.d/postgresql
-  chmod +x /etc/init.d/postgresql
-  [ "${PM}" == 'yum' ] && { chkconfig --add postgresql; chkconfig postgresql on; }
-  [ "${PM}" == 'apt' ] && update-rc.d postgresql defaults
+  if [ -e /bin/systemctl ]; then
+    /bin/cp ${oneinstack_dir}/init.d/postgresql.service /lib/systemd/system/
+    sed -i "s@=/usr/local/pgsql@=${pgsql_install_dir}@g" /lib/systemd/system/postgresql.service
+    sed -i "s@PGDATA=.*@PGDATA=${pgsql_data_dir}@" /lib/systemd/system/postgresql.service
+    systemctl enable postgresql
+  else
+    /bin/cp ./contrib/start-scripts/linux /etc/init.d/postgresql
+    sed -i "s@^prefix=.*@prefix=${pgsql_install_dir}@" /etc/init.d/postgresql
+    sed -i "s@^PGDATA=.*@PGDATA=${pgsql_data_dir}@" /etc/init.d/postgresql
+    chmod +x /etc/init.d/postgresql
+    [ "${PM}" == 'yum' ] && { chkconfig --add postgresql; chkconfig postgresql on; }
+    [ "${PM}" == 'apt-get' ] && update-rc.d postgresql defaults
+  fi
   popd
   su - postgres -c "${pgsql_install_dir}/bin/initdb -D ${pgsql_data_dir}"
   service postgresql start

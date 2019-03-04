@@ -1,18 +1,18 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
-Install-JDK10() {
+Install_JDK110() {
   pushd ${oneinstack_dir}/src > /dev/null
-  JDK_FILE="jdk-${jdk10_ver}_linux-${SYS_BIT_j}_bin.tar.gz"
+  JDK_FILE="jdk-${jdk110_ver}_linux-${SYS_BIT_j}_bin.tar.gz"
   JAVA_dir=/usr/java
-  JDK_NAME="jdk-${jdk10_ver}"
+  JDK_NAME="jdk-${jdk110_ver}"
   JDK_PATH=${JAVA_dir}/${JDK_NAME}
   [ "${PM}" == 'yum' ] && [ -n "`rpm -qa | grep jdk`" ] && rpm -e `rpm -qa | grep jdk`
   [ ! -e ${JAVA_dir} ] && mkdir -p ${JAVA_dir}

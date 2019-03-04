@@ -1,22 +1,21 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_Jemalloc() {
   if [ ! -e "/usr/local/lib/libjemalloc.so" ]; then
     pushd ${oneinstack_dir}/src > /dev/null
-    tar xjf jemalloc-$jemalloc_ver.tar.bz2
-    pushd jemalloc-$jemalloc_ver
-    LDFLAGS="${LDFLAGS} -lrt" ./configure
+    tar xjf jemalloc-${jemalloc_ver}.tar.bz2
+    pushd jemalloc-${jemalloc_ver} > /dev/null
+    ./configure
     make -j ${THREAD} && make install
-    unset LDFLAGS
-    popd
+    popd > /dev/null
     if [ -f "/usr/local/lib/libjemalloc.so" ]; then
       if [ "${OS_BIT}" == '64' -a "${OS}" == 'CentOS' ]; then
         ln -s /usr/local/lib/libjemalloc.so.2 /usr/lib64/libjemalloc.so.1
@@ -31,6 +30,6 @@ Install_Jemalloc() {
       echo "${CFAILURE}jemalloc install failed, Please contact the author! ${CEND}"
       kill -9 $$
     fi
-    popd
+    popd > /dev/null
   fi
 }

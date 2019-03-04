@@ -137,8 +137,7 @@
 	            <h1 class="h2" id="home">控制中心</h1>
 	            <div class="btn-toolbar mb-2 mb-md-0">
 	              <div class="btn-group mr-2">
-	                <a class="btn btn-sm btn-outline-primary btn_prober" href="prober.php" target="_blank"><span data-feather="compass"></span> prober</a>
-	                <a class="btn btn-sm btn-outline-primary btn_tz" href="tz.php" target="_blank"><span data-feather="compass"></span> 探针</a>
+	                <a class="btn btn-sm btn-outline-primary btn_prober" href="xprober.php" target="_blank"><span data-feather="compass"></span> 探针</a>
 	                <a class="btn btn-sm btn-outline-info btn_phpinfo" href="phpinfo.php" target="_blank"><span data-feather="info"></span> phpinfo</a>
 	                <a class="btn btn-sm btn-outline-secondary btn_op" href="ocp.php" target="_blank"><span data-feather="cpu"></span> Opcache</a>
 	              </div>
@@ -150,14 +149,13 @@
 		
 			<section class="section" id="home_section">
 	          	<h2>Congratulations, OneinStack installed successfully!</h2>
-	          	<h3><a href="https://oneinstack.com" target="_blank" class="links">OneinStack </a><a href="http://www.linuxeye.com/" target="_blank">Linux</a>+Nginx/Tengine+MySQL/MariaDB/Percona</br>+PHP+Pureftpd+phpMyAdmin+redis+memcached+jemalloc.</h3>
+	          	<h3><a href="https://oneinstack.com" target="_blank" class="links">OneinStack </a><a href="https://linuxeye.com/" target="_blank">Linux</a>+Nginx/Tengine+MySQL/MariaDB/Percona</br>+PHP+Pureftpd+phpMyAdmin+redis+memcached+jemalloc.</h3>
 
  			</section>
 		
 			<section class="section" id="tools_section">
 	          <h2 class="mt-5" id="tools">主机工具</h2>
-	          	<a class="btn btn-primary btn_tz" href="tz.php" target="_blank" role="button">探针</a>
-	          	<a class="btn btn-primary btn_prober" href="prober.php" target="_blank" role="button">prober</a>
+	          	<a class="btn btn-primary btn_prober" href="xprober.php" target="_blank" role="button">探针</a>
 	          	<a class="btn btn-info btn_phpinfo" href="phpinfo.php" target="_blank" role="button">phpinfo</a>
 	          	<a class="btn btn-success btn_pma" href="phpMyAdmin/" target="_blank" role="button">phpMyAdmin</a>
 	          	<a class="btn btn-secondary btn_op" href="ocp.php" target="_blank" role="button">Opcache</a>
@@ -177,7 +175,7 @@
 			              <li>DNSPOD</li>
 			              <li>Cloudflare</li>
 			            </ul>
-			            <a href="https://help.aliyun.com/document_detail/29716.html" target="_blank" type="button" class="btn btn-lg btn-block btn-primary">详细教程</a>
+			            <a href="https://help.aliyun.com/document_detail/29716.html" target="_blank" type="role" class="btn btn-lg btn-block btn-primary">详细教程</a>
 			          </div>
 			        </div>
 			        <div class="card mb-4 box-shadow">
@@ -188,10 +186,10 @@
 			            <h1 class="card-title pricing-card-title">建立<small class="text-muted">网站</small></h1>
 			            <ul class="list-unstyled mt-3 mb-4">
 			              <li>新建虚拟主机 ./vhost.sh</li>
-			              <li>删除虚拟主机 ./vhost.sh del</li>
+			              <li>删除虚拟主机 ./vhost.sh --del</li>
 			              <li>管理FTP账号 ./pureftpd_vhost.sh</li>
 			            </ul>
-			            <a href="https://oneinstack.com/install/" target="_blank" type="button" class="btn btn-lg btn-block btn-primary">详细教程</a>
+			            <a href="https://oneinstack.com/install/" target="_blank" type="role" class="btn btn-lg btn-block btn-primary">详细教程</a>
 			          </div>
 			        </div>
 			        <div class="card mb-4 box-shadow">
@@ -205,7 +203,7 @@
 			              <li>管理FTP账号 ./pureftpd_vhost.sh</li>
 			              <li>备份 ./backup_setup.sh</li>
 			            </ul>
-			            <a href="https://oneinstack.com/install/" target="_blank" type="button" class="btn btn-lg btn-block btn-primary">详细教程</a>
+			            <a href="https://oneinstack.com/install/" target="_blank" type="role" class="btn btn-lg btn-block btn-primary">详细教程</a>
 			          </div>
 			        </div>
 			      </div>
@@ -219,7 +217,7 @@
 	          <img class="img-fluid" src="https://static.oneinstack.com/images/vhost.png" alt="《交互安装》">
 	          <h2 class="mt-5">如何删除虚拟主机?</h2>
 	          <div class="alert alert-primary" role="alert">
-	          	<code>./vhost.sh del</code>
+	          	<code>./vhost.sh --del</code>
 	          </div>
 	          <img class="img-fluid" src="https://static.oneinstack.com/images/vhost_del.png" alt="《交互安装》">
 			</section>
@@ -249,7 +247,7 @@
 	          <img class="img-fluid" src="https://static.oneinstack.com/images/backup_setup.png" alt="《交互安装》">
 	          <div class="alert alert-primary" role="alert"><pre><code>./backup.sh # Start backup, You can add cron jobs
    # crontab -l # Examples
-     0 1 * * * cd ~/oneinstack;./backup.sh  &gt; /dev/null 2&gt;&amp;1 &amp;</code></pre></div>
+     0 1 * * * ~/oneinstack/backup.sh  &gt; /dev/null 2&gt;&amp;1 &amp;</code></pre></div>
 			</section>
 
 			<section class="section" id="manage_section">	
@@ -267,7 +265,7 @@
 				<div class="alert alert-primary" role="alert"><code>service php-fpm {start<span class="pl-k">|</span>stop<span class="pl-k">|</span>restart<span class="pl-k">|</span>reload<span class="pl-k">|</span>status}</code></div>
 				<p class="mt-4">HHVM:</p>
 				<div class="alert alert-primary" role="alert"><code>service supervisord {start|stop|status|restart|reload}</code></div>
-				<p class="mt-4"><strong><span style="color: #ff0000;">注</span></strong>：hhvm进程交给supervisord管理，了解更多请访问《<a href="https://blog.linuxeye.com/408.html" target="_blank" rel="noopener noreferrer">Supervisor管理hhvm进程</a>》<br>
+				<p class="mt-4"><strong><span style="color: #ff0000;">注</span></strong>：hhvm进程交给supervisord管理，了解更多请访问《<a href="https://linuxeye.com/408.html" target="_blank" rel="noopener noreferrer">Supervisor管理hhvm进程</a>》<br>
 				<p class="mt-4">Apache:</p>
 				<div class="alert alert-primary" role="alert"><code>service httpd {start|restart|stop}</code></div>
 				<p class="mt-4">Tomcat:</p>
@@ -324,7 +322,7 @@
           	<div align="center" class="mt-5"><iframe src="https://static.oneinstack.com/ad_buttom.html" width="475" frameborder="0" scrolling="no"></iframe></div>
           	<div>          		
           		<p>
-          			<a href="https://oneinstack.com" target="_blank">OneinStack</a> by <a href="https://blog.linuxeye.cn/" target="_blank">LinuxEye</a>
+          			<a href="https://oneinstack.com" target="_blank">OneinStack</a> by <a href="https://linuxeye.com/" target="_blank">LinuxEye</a>
           			&nbsp; &nbsp; &nbsp; &nbsp; QQ群:&nbsp;&nbsp; 262601796(新) 558540514(付费千人群)</a>
           		</p>
           		<p align="right"><a href="#">回顶部</a></p>
@@ -332,6 +330,6 @@
         </main>
       </div>
     </div>
-    <script src="https://static.oneinstack.com/assets/ois.js"></script>
+    <script src="https://static.oneinstack.com/assets/ois20190114.js"></script>
   </body>
 </html>

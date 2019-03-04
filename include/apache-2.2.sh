@@ -1,27 +1,27 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_Apache22() {
   pushd ${oneinstack_dir}/src > /dev/null
   id -u ${run_user} >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin ${run_user}
   tar xzf httpd-${apache22_ver}.tar.gz
-  pushd httpd-${apache22_ver}
+  pushd httpd-${apache22_ver} > /dev/null
   [ ! -d "${apache_install_dir}" ] && mkdir -p ${apache_install_dir}
   [ "${Ubuntu_ver}" == "12" ] && sed -i '@SSL_PROTOCOL_SSLV2@d' modules/ssl/ssl_engine_io.c
-  LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} --with-mpm=prefork --with-included-apr --enable-headers --enable-deflate --enable-so --enable-rewrite --enable-ssl--with-ssl=${openssl_install_dir} --enable-expires --enable-static-support --enable-suexec --enable-modules=all --enable-mods-shared=all
+  LDFLAGS=-ldl ./configure --prefix=${apache_install_dir} --with-mpm=prefork --enable-mpms-shared=all --with-included-apr --enable-headers --enable-mime-magic --enable-deflate --enable-proxy --enable-so --enable-dav --enable-rewrite --enable-expires --enable-static-support --enable-suexec --with-expat=builtin --enable-mods-shared=most --enable-ssl --with-ssl=${openssl_install_dir}
   make -j ${THREAD} && make install
   unset LDFLAGS
-  if [ -e "${apache_install_dir}/conf/httpd.conf" ]; then
+  if [ -e "${apache_install_dir}/bin/httpd" ]; then
     echo "${CSUCCESS}Apache installed successfully! ${CEND}"
-    popd
+    popd > /dev/null
     rm -rf httpd-${apache22_ver}
   else
     rm -rf ${apache_install_dir}
@@ -32,12 +32,19 @@ Install_Apache22() {
   [ -z "`grep ^'export PATH=' /etc/profile`" ] && echo "export PATH=${apache_install_dir}/bin:\$PATH" >> /etc/profile
   [ -n "`grep ^'export PATH=' /etc/profile`" -a -z "`grep ${apache_install_dir} /etc/profile`" ] && sed -i "s@^export PATH=\(.*\)@export PATH=${apache_install_dir}/bin:\1@" /etc/profile
   . /etc/profile
-  /bin/cp ${apache_install_dir}/bin/apachectl /etc/init.d/httpd
-  sed -i '2a # chkconfig: - 85 15' /etc/init.d/httpd
-  sed -i '3a # description: Apache is a World Wide Web server. It is used to serve' /etc/init.d/httpd
-  chmod +x /etc/init.d/httpd
-  [ "${PM}" == 'yum' ] && { chkconfig --add httpd; chkconfig httpd on; }
-  [ "${PM}" == 'apt' ] && update-rc.d httpd defaults
+
+  if [ -e /bin/systemctl ]; then
+    /bin/cp ../init.d/httpd.service /lib/systemd/system/
+    sed -i "s@/usr/local/apache@${apache_install_dir}@g" /lib/systemd/system/httpd.service
+    systemctl enable httpd
+  else
+    /bin/cp ${apache_install_dir}/bin/apachectl /etc/init.d/httpd
+    sed -i '2a # chkconfig: - 85 15' /etc/init.d/httpd
+    sed -i '3a # description: Apache is a World Wide Web server. It is used to serve' /etc/init.d/httpd
+    chmod +x /etc/init.d/httpd
+    [ "${PM}" == 'yum' ] && { chkconfig --add httpd; chkconfig httpd on; }
+    [ "${PM}" == 'apt-get' ] && update-rc.d httpd defaults
+  fi
 
   sed -i "s@^User daemon@User ${run_user}@" ${apache_install_dir}/conf/httpd.conf
   sed -i "s@^Group daemon@Group ${run_user}@" ${apache_install_dir}/conf/httpd.conf
@@ -126,5 +133,5 @@ EOF
   fi
   ldconfig
   service httpd start
-  popd
+  popd > /dev/null
 }

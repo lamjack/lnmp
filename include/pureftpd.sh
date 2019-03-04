@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_PureFTPd() {
   pushd ${oneinstack_dir}/src > /dev/null
@@ -14,11 +14,11 @@ Install_PureFTPd() {
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin ${run_user}
 
   tar xzf pure-ftpd-${pureftpd_ver}.tar.gz
-  pushd pure-ftpd-${pureftpd_ver}
+  pushd pure-ftpd-${pureftpd_ver} > /dev/null
   [ ! -d "${pureftpd_install_dir}" ] && mkdir -p ${pureftpd_install_dir}
   ./configure --prefix=${pureftpd_install_dir} CFLAGS=-O2 --with-puredb --with-quotas --with-cookie --with-virtualhosts --with-virtualchroot --with-diraliases --with-sysquotas --with-ratios --with-altlog --with-paranoidmsg --with-shadow --with-welcomemsg --with-throttling --with-uploadscript --with-language=english --with-rfc2640 --with-tls
   make -j ${THREAD} && make install
-  popd
+  popd > /dev/null
   if [ -e "${pureftpd_install_dir}/sbin/pure-ftpwho" ]; then
     if [ -e /bin/systemctl ]; then
       /bin/cp ../init.d/pureftpd.service /lib/systemd/system/
@@ -29,7 +29,7 @@ Install_PureFTPd() {
       sed -i "s@/usr/local/pureftpd@${pureftpd_install_dir}@g" /etc/init.d/pureftpd
       chmod +x /etc/init.d/pureftpd
       [ "${PM}" == 'yum' ] && { chkconfig --add pureftpd; chkconfig pureftpd on; }
-      [ "${PM}" == 'apt' ] && { sed -i 's@^. /etc/rc.d/init.d/functions@. /lib/lsb/init-functions@' /etc/init.d/pureftpd; update-rc.d pureftpd defaults; }
+      [ "${PM}" == 'apt-get' ] && { sed -i 's@^. /etc/rc.d/init.d/functions@. /lib/lsb/init-functions@' /etc/init.d/pureftpd; update-rc.d pureftpd defaults; }
       [ "${Debian_ver}" == '7' ] && sed -i 's@/var/lock/subsys/@/var/lock/@g' /etc/init.d/pureftpd
     fi
 
@@ -37,7 +37,7 @@ Install_PureFTPd() {
     /bin/cp ../config/pure-ftpd.conf ${pureftpd_install_dir}/etc
     sed -i "s@^PureDB.*@PureDB  ${pureftpd_install_dir}/etc/pureftpd.pdb@" ${pureftpd_install_dir}/etc/pure-ftpd.conf
     sed -i "s@^LimitRecursion.*@LimitRecursion  65535 8@" ${pureftpd_install_dir}/etc/pure-ftpd.conf
-    [ -z "${IPADDR}" ] && IPADDR=127.0.0.1
+    IPADDR=${IPADDR:-127.0.0.1}
     [ ! -d /etc/ssl/private ] && mkdir -p /etc/ssl/private
     openssl dhparam -out /etc/ssl/private/pure-ftpd-dhparams.pem 2048
     openssl req -x509 -days 7300 -sha256 -nodes -subj "/C=CN/ST=Shanghai/L=Shanghai/O=OneinStack/CN=${IPADDR}" -newkey rsa:2048 -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem
@@ -49,15 +49,27 @@ Install_PureFTPd() {
     service pureftpd start
 
     # iptables Ftp
-    if [ "${iptables_yn}" == 'y' ]; then
-      if [ "${PM}" == 'yum' ]; then
-        if [ -z "$(grep '20000:30000' /etc/sysconfig/iptables)" ]; then
+    if [ "${PM}" == 'yum' ]; then
+      if [ -n "`grep 'dport 80 ' /etc/sysconfig/iptables`" ] && [ -z "$(grep '20000:30000' /etc/sysconfig/iptables)" ]; then
+        iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 21 -j ACCEPT
+        iptables -I INPUT 6 -p tcp -m state --state NEW -m tcp --dport 20000:30000 -j ACCEPT
+        service iptables save
+        ip6tables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 21 -j ACCEPT
+        ip6tables -I INPUT 6 -p tcp -m state --state NEW -m tcp --dport 20000:30000 -j ACCEPT
+        service ip6tables save
+      fi
+    elif [ "${PM}" == 'apt-get' ]; then
+      if [ -e '/etc/iptables/rules.v4' ]; then
+        if [ -n "`grep 'dport 80 ' /etc/iptables/rules.v4`" ] && [ -z "$(grep '20000:30000' /etc/iptables/rules.v4)" ]; then
           iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 21 -j ACCEPT
           iptables -I INPUT 6 -p tcp -m state --state NEW -m tcp --dport 20000:30000 -j ACCEPT
-          service iptables save
+          iptables-save > /etc/iptables/rules.v4
+          ip6tables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 21 -j ACCEPT
+          ip6tables -I INPUT 6 -p tcp -m state --state NEW -m tcp --dport 20000:30000 -j ACCEPT
+          ip6tables-save > /etc/iptables/rules.v6
         fi
-      elif [ "${PM}" == 'apt' ]; then
-        if [ -z "$(grep '20000:30000' /etc/iptables.up.rules)" ]; then
+      elif [ -e '/etc/iptables.up.rules' ]; then
+        if [ -n "`grep 'dport 80 ' /etc/iptables.up.rules`" ] && [ -z "$(grep '20000:30000' /etc/iptables.up.rules)" ]; then
           iptables -I INPUT 5 -p tcp -m state --state NEW -m tcp --dport 21 -j ACCEPT
           iptables -I INPUT 6 -p tcp -m state --state NEW -m tcp --dport 20000:30000 -j ACCEPT
           iptables-save > /etc/iptables.up.rules
@@ -72,5 +84,5 @@ Install_PureFTPd() {
     echo "${CFAILURE}Pure-Ftpd install failed, Please contact the author! ${CEND}"
     kill -9 $$
   fi
-  popd
+  popd > /dev/null
 }

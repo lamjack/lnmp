@@ -1,19 +1,23 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_PHP54() {
   pushd ${oneinstack_dir}/src > /dev/null
+  if [ -e "${apache_install_dir}/bin/httpd" ];then
+    [ "$(${apache_install_dir}/bin/httpd -v | awk -F'.' /version/'{print $2}')" == '4' ] && Apache_main_ver=24
+    [ "$(${apache_install_dir}/bin/httpd -v | awk -F'.' /version/'{print $2}')" == '2' ] && Apache_main_ver=22
+  fi
   if [ ! -e "/usr/local/lib/libiconv.la" ]; then
     tar xzf libiconv-${libiconv_ver}.tar.gz
     patch -d libiconv-${libiconv_ver} -p0 < libiconv-glibc-2.16.patch
-    pushd libiconv-${libiconv_ver}
+    pushd libiconv-${libiconv_ver} > /dev/null
     ./configure --prefix=/usr/local
     make -j ${THREAD} && make install
     popd
@@ -22,32 +26,35 @@ Install_PHP54() {
 
   if [ ! -e "${curl_install_dir}/lib/libcurl.la" ]; then
     tar xzf curl-${curl_ver}.tar.gz
-    pushd curl-${curl_ver}
+    pushd curl-${curl_ver} > /dev/null
+    [ "${Debian_ver}" == '8' ] && apt-get -y remove zlib1g-dev
     ./configure --prefix=${curl_install_dir} --with-ssl=${openssl_install_dir}
     make -j ${THREAD} && make install
-    popd
+    [ "${Debian_ver}" == '8' ] && apt-get -y install libc-client2007e-dev libfreetype6-dev libglib2.0-dev libpng12-dev libssl-dev libzip-dev zlib1g-dev
+    popd > /dev/null
     rm -rf curl-${curl_ver}
   fi
 
   if [ ! -e "/usr/local/lib/libmcrypt.la" ]; then
     tar xzf libmcrypt-${libmcrypt_ver}.tar.gz
-    pushd libmcrypt-${libmcrypt_ver}
+    pushd libmcrypt-${libmcrypt_ver} > /dev/null
     ./configure
     make -j ${THREAD} && make install
     ldconfig
-    pushd libltdl
+    pushd libltdl > /dev/null
     ./configure --enable-ltdl-install
     make -j ${THREAD} && make install
-    popd;popd
+    popd > /dev/null
+    popd > /dev/null
     rm -rf libmcrypt-${libmcrypt_ver}
   fi
 
   if [ ! -e "/usr/local/lib/libmhash.la" ]; then
     tar xzf mhash-${mhash_ver}.tar.gz
-    pushd mhash-${mhash_ver}
+    pushd mhash-${mhash_ver} > /dev/null
     ./configure
     make -j ${THREAD} && make install
-    popd
+    popd > /dev/null
     rm -rf mhash-${mhash_ver}
   fi
 
@@ -64,23 +71,23 @@ Install_PHP54() {
     fi
   fi
 
-  tar xzf mcrypt-$mcrypt_ver.tar.gz
-  pushd mcrypt-$mcrypt_ver
+  tar xzf mcrypt-${mcrypt_ver}.tar.gz
+  pushd mcrypt-${mcrypt_ver} > /dev/null
   ldconfig
   ./configure
   make -j ${THREAD} && make install
-  popd
-  rm -rf mcrypt-$mcrypt_ver
+  popd > /dev/null
+  rm -rf mcrypt-${mcrypt_ver}
 
   id -u ${run_user} >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin ${run_user}
 
   tar xzf php-${php54_ver}.tar.gz
   patch -d php-${php54_ver} -p0 < fpm-race-condition.patch
-  pushd php-${php54_ver}
+  pushd php-${php54_ver} > /dev/null
   make clean
   [ ! -d "${php_install_dir}" ] && mkdir -p ${php_install_dir}
-  if [[ ${apache_option} =~ ^[1-2]$ ]] || [ -e "${apache_install_dir}/bin/apxs" ]; then
+  if [ "${apache_option}" == '2' ] || [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
     ./configure --prefix=${php_install_dir} --with-config-file-path=${php_install_dir}/etc \
     --with-config-file-scan-dir=${php_install_dir}/etc/php.d \
     --with-apxs2=${apache_install_dir}/bin/apxs --disable-fileinfo \
@@ -126,23 +133,29 @@ Install_PHP54() {
 
   sed -i "s@^memory_limit.*@memory_limit = ${Memory_limit}M@" ${php_install_dir}/etc/php.ini
   sed -i 's@^output_buffering =@output_buffering = On\noutput_buffering =@' ${php_install_dir}/etc/php.ini
-  sed -i 's@^;cgi.fix_pathinfo.*@cgi.fix_pathinfo=0@' ${php_install_dir}/etc/php.ini
+  #sed -i 's@^;cgi.fix_pathinfo.*@cgi.fix_pathinfo=0@' ${php_install_dir}/etc/php.ini
   sed -i 's@^short_open_tag = Off@short_open_tag = On@' ${php_install_dir}/etc/php.ini
   sed -i 's@^expose_php = On@expose_php = Off@' ${php_install_dir}/etc/php.ini
   sed -i 's@^request_order.*@request_order = "CGP"@' ${php_install_dir}/etc/php.ini
-  sed -i 's@^;date.timezone.*@date.timezone = Asia/Shanghai@' ${php_install_dir}/etc/php.ini
+  sed -i "s@^date.timezone.*@date.timezone = ${timezone}@" ${php_install_dir}/etc/php.ini
   sed -i 's@^post_max_size.*@post_max_size = 100M@' ${php_install_dir}/etc/php.ini
   sed -i 's@^upload_max_filesize.*@upload_max_filesize = 50M@' ${php_install_dir}/etc/php.ini
   sed -i 's@^max_execution_time.*@max_execution_time = 5@' ${php_install_dir}/etc/php.ini
   sed -i 's@^disable_functions.*@disable_functions = passthru,exec,system,chroot,chgrp,chown,shell_exec,proc_open,proc_get_status,ini_alter,ini_restore,dl,openlog,syslog,readlink,symlink,popepassthru,stream_socket_server,fsocket,popen@' ${php_install_dir}/etc/php.ini
   [ -e /usr/sbin/sendmail ] && sed -i 's@^;sendmail_path.*@sendmail_path = /usr/sbin/sendmail -t -i@' ${php_install_dir}/etc/php.ini
 
-  if [[ ! ${apache_option} =~ ^[1-2]$ ]] && [ ! -e "${apache_install_dir}/bin/apxs" ]; then
+  if [ ! -e "${apache_install_dir}/bin/apxs" -o "${Apache_main_ver}" == '24' ] && [ "${apache_mode_option}" != '2' ]; then
     # php-fpm Init Script
-    /bin/cp sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
-    chmod +x /etc/init.d/php-fpm
-    [ "${PM}" == 'yum' ] && { chkconfig --add php-fpm; chkconfig php-fpm on; }
-    [ "${PM}" == 'apt' ] && update-rc.d php-fpm defaults
+    if [ -e /bin/systemctl ]; then
+      /bin/cp ${oneinstack_dir}/init.d/php-fpm.service /lib/systemd/system/
+      sed -i "s@/usr/local/php@${php_install_dir}@g" /lib/systemd/system/php-fpm.service
+      systemctl enable php-fpm
+    else
+      /bin/cp sapi/fpm/init.d.php-fpm /etc/init.d/php-fpm
+      chmod +x /etc/init.d/php-fpm
+      [ "${PM}" == 'yum' ] && { chkconfig --add php-fpm; chkconfig php-fpm on; }
+      [ "${PM}" == 'apt-get' ] && update-rc.d php-fpm defaults
+    fi
 
     cat > ${php_install_dir}/etc/php-fpm.conf <<EOF
 ;;;;;;;;;;;;;;;;;;;;;
@@ -188,7 +201,7 @@ request_terminate_timeout = 120
 request_slowlog_timeout = 0
 
 pm.status_path = /php-fpm_status
-slowlog = log/slow.log
+slowlog = var/log/slow.log
 rlimit_files = 51200
 rlimit_core = 0
 
@@ -199,8 +212,6 @@ env[TMP] = /tmp
 env[TMPDIR] = /tmp
 env[TEMP] = /tmp
 EOF
-
-    [ -d "/run/shm" -a ! -e "/dev/shm" ] && sed -i 's@/dev/shm@/run/shm@' ${php_install_dir}/etc/php-fpm.conf ${oneinstack_dir}/vhost.sh ${oneinstack_dir}/config/nginx.conf
 
     if [ $Mem -le 3000 ]; then
       sed -i "s@^pm.max_children.*@pm.max_children = $(($Mem/3/20))@" ${php_install_dir}/etc/php-fpm.conf
@@ -229,13 +240,12 @@ EOF
       sed -i "s@^pm.max_spare_servers.*@pm.max_spare_servers = 80@" ${php_install_dir}/etc/php-fpm.conf
     fi
 
-    #[ "$web_yn" == 'n' ] && sed -i "s@^listen =.*@listen = $IPADDR:9000@" ${php_install_dir}/etc/php-fpm.conf
     service php-fpm start
 
-  elif [[ ${apache_option} =~ ^[1-2]$ ]] || [ -e "${apache_install_dir}/bin/apxs" ]; then
+  elif [ "${apache_option}" == '2' ] || [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
     service httpd restart
   fi
-  popd
+  popd > /dev/null
   [ -e "${php_install_dir}/bin/phpize" ] && rm -rf php-${php54_ver}
-  popd
+  popd > /dev/null
 }

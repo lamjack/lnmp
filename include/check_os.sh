@@ -1,18 +1,19 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 if [ -e "/usr/bin/yum" ]; then
   PM=yum
   command -v lsb_release >/dev/null 2>&1 || { yum -y install redhat-lsb-core; clear; }
-elif [ -e "/usr/bin/apt-get" ]; then
-  PM=apt
+fi
+if [ -e "/usr/bin/apt-get" ]; then
+  PM=apt-get
   command -v lsb_release >/dev/null 2>&1 || { apt-get -y update; apt-get -y install lsb-release; clear; }
 fi
 

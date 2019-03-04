@@ -1,25 +1,20 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 DEMO() {
   pushd ${oneinstack_dir}/src > /dev/null
   [ "${IPADDR_COUNTRY}"x == "CN"x ] && /bin/cp ${oneinstack_dir}/config/index_cn.html ${wwwroot_dir}/default/index.html || /bin/cp ${oneinstack_dir}/config/index.html ${wwwroot_dir}/default
 
   if [ -e "${php_install_dir}/bin/php" ]; then
-    if [ "${IPADDR_COUNTRY}"x == "CN"x ]; then
-      src_url=http://mirrors.linuxeye.com/oneinstack/src/tz.zip && Download_src
-      unzip -q tz.zip -d ${wwwroot_dir}/default
-    else
-      src_url=http://mirrors.linuxeye.com/oneinstack/src/tz_e.zip && Download_src
-      unzip -q tz_e.zip -d ${wwwroot_dir}/default;/bin/mv ${wwwroot_dir}/default/{tz_e.php,prober.php}
-    fi
+    src_url=http://mirrors.linuxeye.com/oneinstack/src/xprober.php && Download_src
+    /bin/cp xprober.php ${wwwroot_dir}/default
 
     echo "<?php phpinfo() ?>" > ${wwwroot_dir}/default/phpinfo.php
     case "${phpcache_option}" in
@@ -43,6 +38,6 @@ DEMO() {
     esac
   fi
   chown -R ${run_user}.${run_user} ${wwwroot_dir}/default
-  [ -e /usr/bin/systemctl ] && systemctl daemon-reload
-  popd
+  [ -e /bin/systemctl ] && systemctl daemon-reload
+  popd > /dev/null
 }

@@ -1,12 +1,12 @@
 #!/bin/bash
 # Author:  yeho <lj2007331 AT gmail.com>
-# BLOG:  https://blog.linuxeye.cn
+# BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RadHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
 #
 # Project home page:
 #       https://oneinstack.com
-#       https://github.com/lj2007331/oneinstack
+#       https://github.com/oneinstack/oneinstack
 
 Install_Tengine() {
   pushd ${oneinstack_dir}/src > /dev/null
@@ -18,7 +18,7 @@ Install_Tengine() {
   tar xzf openssl-${openssl_ver}.tar.gz
   [ "${Fedora_ver}" == '28' ] && patch -d tengine-${tengine_ver} -p1 < 0001-unix-ngx_user-Apply-fix-for-really-old-bug-in-glibc-.patch
   patch -d tengine-${tengine_ver} -p0 < nginx-auto-cc-gcc.patch
-  pushd tengine-${tengine_ver}
+  pushd tengine-${tengine_ver} > /dev/null
   # Modify Tengine version
   #sed -i 's@TENGINE "/" TENGINE_VERSION@"Tengine/unknown"@' src/core/nginx.h
 
@@ -29,10 +29,8 @@ Install_Tengine() {
   ./configure --prefix=${tengine_install_dir} --user=${run_user} --group=${run_user} --with-http_v2_module --with-http_ssl_module --with-http_gzip_static_module --with-http_realip_module --with-http_flv_module --with-http_mp4_module --with-http_concat_module=shared --with-http_sysguard_module=shared --with-openssl=../openssl-${openssl_ver} --with-pcre=../pcre-${pcre_ver} --with-pcre-jit --with-jemalloc ${nginx_modules_options}
   make && make install
   if [ -e "${tengine_install_dir}/conf/nginx.conf" ]; then
-    popd
-    rm -rf pcre-${pcre_ver}
-    rm -rf openssl-${openssl_ver}
-    rm -rf tengine-${tengine_ver}
+    popd > /dev/null
+    rm -rf pcre-${pcre_ver} openssl-${openssl_ver} tengine-${tengine_ver}
     echo "${CSUCCESS}Tengine installed successfully! ${CEND}"
   else
     rm -rf ${tengine_install_dir}
@@ -50,17 +48,17 @@ Install_Tengine() {
     systemctl enable nginx
   else
     [ "${PM}" == 'yum' ] && { /bin/cp ../init.d/Nginx-init-CentOS /etc/init.d/nginx; sed -i "s@/usr/local/nginx@${tengine_install_dir}@g" /etc/init.d/nginx; chkconfig --add nginx; chkconfig nginx on; }
-    [ "${PM}" == 'apt' ] && { /bin/cp ../init.d/Nginx-init-Ubuntu /etc/init.d/nginx; sed -i "s@/usr/local/nginx@${tengine_install_dir}@g" /etc/init.d/nginx; update-rc.d nginx defaults; }
+    [ "${PM}" == 'apt-get' ] && { /bin/cp ../init.d/Nginx-init-Ubuntu /etc/init.d/nginx; sed -i "s@/usr/local/nginx@${tengine_install_dir}@g" /etc/init.d/nginx; update-rc.d nginx defaults; }
   fi
 
   mv ${tengine_install_dir}/conf/nginx.conf{,_bk}
-  if [[ ${apache_option} =~ ^[1-2]$ ]]; then
+  if [[ ${apache_option} =~ ^[1-2]$ ]] || [ -e "${apache_install_dir}/bin/httpd" ]; then
     /bin/cp ../config/nginx_apache.conf ${tengine_install_dir}/conf/nginx.conf
-  elif [[ ${tomcat_option} =~ ^[1-2]$ ]] && [ ! -e "${php_install_dir}/bin/php" ]; then
+  elif { [[ ${tomcat_option} =~ ^[1-4]$ ]] || [ -e "${tomcat_install_dir}/conf/server.xml" ]; } && { [[ ! ${php_option} =~ ^[1-8]$ ]] && [ ! -e "${php_install_dir}/bin/php" ]; }; then
     /bin/cp ../config/nginx_tomcat.conf ${tengine_install_dir}/conf/nginx.conf
   else
     /bin/cp ../config/nginx.conf ${tengine_install_dir}/conf/nginx.conf
-    [ "${php_yn}" == 'y' ] && [ -z "`grep '/php-fpm_status' ${tengine_install_dir}/conf/nginx.conf`" ] &&  sed -i "s@index index.html index.php;@index index.html index.php;\n    location ~ /php-fpm_status {\n        #fastcgi_pass remote_php_ip:9000;\n        fastcgi_pass unix:/dev/shm/php-cgi.sock;\n        fastcgi_index index.php;\n        include fastcgi.conf;\n        allow 127.0.0.1;\n        deny all;\n        }@" ${tengine_install_dir}/conf/nginx.conf
+    [[ "${php_option}" =~ ^[1-8]$ ]] && [ -z "`grep '/php-fpm_status' ${tengine_install_dir}/conf/nginx.conf`" ] &&  sed -i "s@index index.html index.php;@index index.html index.php;\n    location ~ /php-fpm_status {\n        #fastcgi_pass remote_php_ip:9000;\n        fastcgi_pass unix:/dev/shm/php-cgi.sock;\n        fastcgi_index index.php;\n        include fastcgi.conf;\n        allow 127.0.0.1;\n        deny all;\n        }@" ${tengine_install_dir}/conf/nginx.conf
   fi
   cat > ${tengine_install_dir}/conf/proxy.conf << EOF
 proxy_connect_timeout 300s;
@@ -102,7 +100,7 @@ ${wwwlogs_dir}/*nginx.log {
   endscript
 }
 EOF
-  popd
+  popd > /dev/null
   ldconfig
   service nginx start
 }
