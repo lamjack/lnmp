@@ -45,8 +45,6 @@ Upgrade_Nginx() {
       char=`get_char`
     fi
     tar xzf nginx-${NEW_nginx_ver}.tar.gz
-    [ "${Fedora_ver}" == '28' ] && patch -d nginx-${NEW_nginx_ver} -p1 < 0001-unix-ngx_user-Apply-fix-for-really-old-bug-in-glibc-.patch
-    patch -d nginx-${NEW_nginx_ver} -p0 < nginx-auto-cc-gcc.patch
     pushd nginx-${NEW_nginx_ver}
     make clean
     sed -i 's@CFLAGS="$CFLAGS -g"@#CFLAGS="$CFLAGS -g"@' auto/cc/gcc # close debug
@@ -79,7 +77,7 @@ Upgrade_Tengine() {
   [ ! -e "${tengine_install_dir}/sbin/nginx" ] && echo "${CWARNING}Tengine is not installed on your system! ${CEND}" && exit 1
   OLD_tengine_ver_tmp=`${tengine_install_dir}/sbin/nginx -v 2>&1`
   OLD_tengine_ver="`echo ${OLD_tengine_ver_tmp#*/} | awk '{print $1}'`"
-  Latest_tengine_ver=`curl --connect-timeout 2 -m 3 -s http://tengine.taobao.org/changelog.html | grep -oE "[0-9]\.[0-9]\.[0-9]+" | head -1`
+  Latest_tengine_ver=`curl --connect-timeout 2 -m 3 -s http://tengine.taobao.org/changelog.html | grep -v generator | grep -oE "[0-9]\.[0-9]\.[0-9]+" | head -1`
   echo
   echo "Current Tengine Version: ${CMSG}${OLD_tengine_ver}${CEND}"
   while :; do echo
@@ -88,9 +86,9 @@ Upgrade_Tengine() {
     if [ "${NEW_tengine_ver}" != "${OLD_tengine_ver}" ]; then
       [ ! -e "tengine-${NEW_tengine_ver}.tar.gz" ] && wget --no-check-certificate -c http://tengine.taobao.org/download/tengine-${NEW_tengine_ver}.tar.gz > /dev/null 2>&1
       if [ -e "tengine-${NEW_tengine_ver}.tar.gz" ]; then
-        src_url=https://www.openssl.org/source/openssl-${openssl_ver}.tar.gz && Download_src
+        src_url=https://www.openssl.org/source/openssl-${openssl11_ver}.tar.gz && Download_src
         src_url=http://mirrors.linuxeye.com/oneinstack/src/pcre-${pcre_ver}.tar.gz && Download_src
-        tar xzf openssl-${openssl_ver}.tar.gz
+        tar xzf openssl-${openssl11_ver}.tar.gz
         tar xzf pcre-${pcre_ver}.tar.gz
         echo "Download [${CMSG}tengine-${NEW_tengine_ver}.tar.gz${CEND}] successfully! "
         break
@@ -110,25 +108,20 @@ Upgrade_Tengine() {
       char=`get_char`
     fi
     tar xzf tengine-${NEW_tengine_ver}.tar.gz
-    [ "${Fedora_ver}" == '28' ] && patch -d tengine-${tengine_ver} -p1 < 0001-unix-ngx_user-Apply-fix-for-really-old-bug-in-glibc-.patch
-    patch -d tengine-${tengine_ver} -p0 < nginx-auto-cc-gcc.patch
     pushd tengine-${NEW_tengine_ver}
     make clean
-    sed -i 's@CFLAGS="$CFLAGS -g"@#CFLAGS="$CFLAGS -g"@' auto/cc/gcc # close debug
     ${tengine_install_dir}/sbin/nginx -V &> $$
     tengine_configure_args_tmp=`cat $$ | grep 'configure arguments:' | awk -F: '{print $2}'`
     rm -rf $$
-    tengine_configure_args=`echo ${tengine_configure_args_tmp} | sed "s@--with-openssl=../openssl-\w.\w.\w\+ @--with-openssl=../openssl-${openssl_ver} @" | sed "s@--with-pcre=../pcre-\w.\w\+ @--with-pcre=../pcre-${pcre_ver} @"`
+    tengine_configure_args=`echo ${tengine_configure_args_tmp} | sed "s@--with-openssl=../openssl-\w.\w.\w\+ @--with-openssl=../openssl-${openssl11_ver} @" | sed "s@--with-pcre=../pcre-\w.\w\+ @--with-pcre=../pcre-${pcre_ver} @"`
     export LUAJIT_LIB=/usr/local/lib
     export LUAJIT_INC=/usr/local/include/luajit-2.1
     ./configure ${tengine_configure_args}
     make
     if [ -f "objs/nginx" ]; then
       /bin/mv ${tengine_install_dir}/sbin/nginx{,`date +%m%d`}
-      /bin/mv ${tengine_install_dir}/sbin/dso_tool{,`date +%m%d`}
       /bin/mv ${tengine_install_dir}/modules{,`date +%m%d`}
       /bin/cp objs/nginx ${tengine_install_dir}/sbin/nginx
-      /bin/cp objs/dso_tool ${tengine_install_dir}/sbin/dso_tool
       chmod +x ${tengine_install_dir}/sbin/*
       make install
       kill -USR2 `cat /var/run/nginx.pid`
@@ -158,9 +151,9 @@ Upgrade_OpenResty() {
     if [ "${NEW_openresy_ver}" != "${OLD_openresy_ver}" ]; then
       [ ! -e "openresty-${NEW_openresy_ver}.tar.gz" ] && wget --no-check-certificate -c https://openresty.org/download/openresty-${NEW_openresy_ver}.tar.gz > /dev/null 2>&1
       if [ -e "openresty-${NEW_openresy_ver}.tar.gz" ]; then
-        src_url=https://www.openssl.org/source/openssl-${openssl_ver}.tar.gz && Download_src
+        src_url=https://www.openssl.org/source/openssl-${openssl11_ver}.tar.gz && Download_src
         src_url=http://mirrors.linuxeye.com/oneinstack/src/pcre-${pcre_ver}.tar.gz && Download_src
-        tar xzf openssl-${openssl_ver}.tar.gz
+        tar xzf openssl-${openssl11_ver}.tar.gz
         tar xzf pcre-${pcre_ver}.tar.gz
         echo "Download [${CMSG}openresty-${NEW_openresy_ver}.tar.gz${CEND}] successfully! "
         break
@@ -180,13 +173,11 @@ Upgrade_OpenResty() {
       char=`get_char`
     fi
     tar xzf openresty-${NEW_openresy_ver}.tar.gz
-    [ "${Fedora_ver}" == '28' ] && patch -d openresty-${openresty_ver}/bundle/nginx-${NEW_openresy_ver%.*} -p1 < 0001-unix-ngx_user-Apply-fix-for-really-old-bug-in-glibc-.patch
-    patch -d openresty-${openresty_ver}/bundle/nginx-${NEW_openresy_ver%.*} -p0 < nginx-auto-cc-gcc.patch
     pushd openresty-${NEW_openresy_ver}
     make clean
     sed -i 's@CFLAGS="$CFLAGS -g"@#CFLAGS="$CFLAGS -g"@' bundle/nginx-${NEW_openresy_ver%.*}/auto/cc/gcc # close debug
     ${openresty_install_dir}/nginx/sbin/nginx -V &> $$
-    ./configure --prefix=${openresty_install_dir} --user=${run_user} --group=${run_user} --with-http_stub_status_module --with-http_v2_module --with-http_ssl_module --with-http_gzip_static_module --with-http_realip_module --with-http_flv_module --with-http_mp4_module --with-openssl=../openssl-${openssl_ver} --with-pcre=../pcre-${pcre_ver} --with-pcre-jit --with-ld-opt='-ljemalloc' ${nginx_modules_options}
+    ./configure --prefix=${openresty_install_dir} --user=${run_user} --group=${run_user} --with-http_stub_status_module --with-http_v2_module --with-http_ssl_module --with-http_gzip_static_module --with-http_realip_module --with-http_flv_module --with-http_mp4_module --with-openssl=../openssl-${openssl11_ver} --with-pcre=../pcre-${pcre_ver} --with-pcre-jit --with-ld-opt='-ljemalloc' ${nginx_modules_options}
     make -j ${THREAD}
     if [ -f "build/nginx-${openresty_ver_tmp}/objs/nginx" ]; then
       /bin/mv ${openresty_install_dir}/nginx/sbin/nginx{,`date +%m%d`}

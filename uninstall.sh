@@ -42,8 +42,8 @@ Show_Help() {
   --allphp                      Uninstall all PHP
   --phpcache                    Uninstall PHP opcode cache
   --php_extensions [ext name]   Uninstall PHP extensions, include zendguardloader,ioncube,
-                                sourceguardian,imagick,gmagick,fileinfo,imap,ldap,phalcon,
-                                yaf,redis,memcached,memcache,mongodb,swoole,xdebug
+                                sourceguardian,imagick,gmagick,fileinfo,imap,ldap,calendar,phalcon,
+                                yaf,yar,redis,memcached,memcache,mongodb,swoole,xdebug
   --hhvm                        Uninstall HHVM
   --pureftpd                    Uninstall PureFtpd
   --redis                       Uninstall Redis-server
@@ -118,8 +118,10 @@ while :; do
       [ -n "`echo ${php_extensions} | grep -w fileinfo`" ] && pecl_fileinfo=1
       [ -n "`echo ${php_extensions} | grep -w imap`" ] && pecl_imap=1
       [ -n "`echo ${php_extensions} | grep -w ldap`" ] && pecl_ldap=1
+      [ -n "`echo ${php_extensions} | grep -w calendar`" ] && pecl_calendar=1
       [ -n "`echo ${php_extensions} | grep -w phalcon`" ] && pecl_phalcon=1
       [ -n "`echo ${php_extensions} | grep -w yaf`" ] && pecl_yaf=1
+      [ -n "`echo ${php_extensions} | grep -w yar`" ] && pecl_yar=1
       [ -n "`echo ${php_extensions} | grep -w redis`" ] && pecl_redis=1
       [ -n "`echo ${php_extensions} | grep -w memcached`" ] && pecl_memcached=1
       [ -n "`echo ${php_extensions} | grep -w memcache`" ] && pecl_memcache=1
@@ -335,8 +337,8 @@ Uninstall_PHPcache() {
   Uninstall_APCU
   Uninstall_eAccelerator
   # reload php
-  [ -e "${php_install_dir}/sbin/php-fpm" ] && service php-fpm reload
-  [ -e "${php_install_dir}${mphp_ver}/sbin/php-fpm" ] && service php${mphp_ver}-fpm reload
+  [ -e "${php_install_dir}/sbin/php-fpm" ] && { [ -e "/bin/systemctl" ] && systemctl reload php-fpm || service php-fpm reload; }
+  [ -n "${mphp_ver}" -a -e "${php_install_dir}${mphp_ver}/sbin/php-fpm" ] && { [ -e "/bin/systemctl" ] && systemctl reload php${mphp_ver}-fpm || service php${mphp_ver}-fpm reload; }
   [ -e "${apache_install_dir}/bin/apachectl" ] && ${apache_install_dir}/bin/apachectl -k graceful
 }
 
@@ -391,6 +393,12 @@ Uninstall_PHPext() {
     Uninstall_pecl_ldap
   fi
 
+  # calendar
+  if [ "${pecl_calendar}" == '1' ]; then
+    . include/pecl_calendar.sh
+    Uninstall_pecl_calendar
+  fi
+
   # phalcon
   if [ "${pecl_phalcon}" == '1' ]; then
     . include/pecl_phalcon.sh
@@ -401,6 +409,12 @@ Uninstall_PHPext() {
   if [ "${pecl_yaf}" == '1' ]; then
     . include/pecl_yaf.sh
     Uninstall_pecl_yaf 2>&1 | tee -a ${oneinstack_dir}/install.log
+  fi
+
+  # yar
+  if [ "${pecl_yar}" == '1' ]; then
+    . include/pecl_yar.sh
+    Uninstall_pecl_yar 2>&1 | tee -a ${oneinstack_dir}/install.log
   fi
 
   # pecl_memcached
@@ -440,8 +454,8 @@ Uninstall_PHPext() {
   fi
 
   # reload php
-  [ -e "${php_install_dir}/sbin/php-fpm" ] && service php-fpm reload
-  [ -e "${php_install_dir}${mphp_ver}/sbin/php-fpm" ] && service php${mphp_ver}-fpm reload
+  [ -e "${php_install_dir}/sbin/php-fpm" ] && { [ -e "/bin/systemctl" ] && systemctl reload php-fpm || service php-fpm reload; }
+  [ -n "${mphp_ver}" -a -e "${php_install_dir}${mphp_ver}/sbin/php-fpm" ] && { [ -e "/bin/systemctl" ] && systemctl reload php${mphp_ver}-fpm || service php${mphp_ver}-fpm reload; }
   [ -e "${apache_install_dir}/bin/apachectl" ] && ${apache_install_dir}/bin/apachectl -k graceful
 }
 
@@ -729,7 +743,7 @@ else
       Uninstall_ALLPHP
     else
       [ "${php_flag}" == 'y' ] && Uninstall_PHP
-      [ "${php_flag}" == 'y' ] && [ "${phpcache_flag}" == 'y' ] && Uninstall_PHPcache
+      [ "${phpcache_flag}" == 'y' ] && Uninstall_PHPcache
       [ -n "${php_extensions}" ] && Uninstall_PHPext
       [ "${mphp_flag}" == 'y' ] && [ "${phpcache_flag}" != 'y' ] && [ -z "${php_extensions}" ] && Uninstall_MPHP
       [ "${mphp_flag}" == 'y' ] && [ "${phpcache_flag}" == 'y' ] && { php_install_dir=${php_install_dir}${mphp_ver}; Uninstall_PHPcache; }
