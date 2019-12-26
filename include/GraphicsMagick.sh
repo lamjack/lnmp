@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -15,7 +15,7 @@ Install_GraphicsMagick() {
     pushd ${oneinstack_dir}/src > /dev/null
     tar xzf GraphicsMagick-${graphicsmagick_ver}.tar.gz
     pushd GraphicsMagick-${graphicsmagick_ver} > /dev/null
-    ./configure --prefix=${gmagick_install_dir} --enable-shared --enable-static
+    ./configure --prefix=${gmagick_install_dir} --enable-shared --enable-static --enable-symbol-prefix
     make -j ${THREAD} && make install
     popd > /dev/null
     rm -rf GraphicsMagick-${graphicsmagick_ver}
@@ -51,7 +51,7 @@ Install_pecl_gmagick() {
       echo "${CSUCCESS}PHP gmagick module installed successfully! ${CEND}"
       rm -rf gmagick-${gmagick_ver} gmagick-${gmagick_oldver}
     else
-      echo "${CFAILURE}PHP gmagick module install failed, Please contact the author! ${CEND}"
+      echo "${CFAILURE}PHP gmagick module install failed, Please contact the author! ${CEND}" && lsb_release -a
     fi
     popd > /dev/null
   fi

@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -54,7 +54,7 @@ EOF
         echo "${CSUCCESS}PHP eaccelerator module installed successfully! ${CEND}"
         rm -rf eaccelerator-${eaccelerator_ver} eaccelerator-eaccelerator-42067ac
       else
-        echo "${CFAILURE}PHP eaccelerator module install failed, Please contact the author! ${CEND}"
+        echo "${CFAILURE}PHP eaccelerator module install failed, Please contact the author! ${CEND}" && lsb_release -a
       fi
     else
       echo; echo "${CWARNING}Your php ${PHP_detail_ver} does not support eAccelerator! ${CEND}";

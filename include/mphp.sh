@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -48,6 +48,10 @@ Install_MPHP() {
         73)
           . include/php-7.3.sh
           Install_PHP73 2>&1 | tee -a ${oneinstack_dir}/install.log
+          ;;
+        74)
+          . include/php-7.4.sh
+          Install_PHP74 2>&1 | tee -a ${oneinstack_dir}/install.log
           ;;
       esac
       if [ -e "${php_install_dir}/sbin/php-fpm" ]; then

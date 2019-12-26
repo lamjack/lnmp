@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -56,7 +56,7 @@ Install_MySQL55() {
     fi
   else
     rm -rf ${mysql_install_dir}
-    echo "${CFAILURE}MySQL install failed, Please contact the author! ${CEND}"
+    echo "${CFAILURE}MySQL install failed, Please contact the author! ${CEND}" && lsb_release -a
     kill -9 $$
   fi
 

@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -12,7 +12,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #                         Uninstall OneinStack                        #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
@@ -191,7 +191,7 @@ Print_web() {
   [ -e "/etc/init.d/tomcat" ] && echo /etc/init.d/tomcat
   [ -e "/etc/logrotate.d/tomcat" ] && echo /etc/logrotate.d/tomcat
   [ -d "/usr/java" ] && echo /usr/java
-  [ -d "/usr/local/apr" ] && echo /usr/local/apr
+  [ -d "${apr_install_dir}" ] && echo ${apr_install_dir}
 }
 
 Uninstall_Web() {
@@ -201,11 +201,12 @@ Uninstall_Web() {
   [ -e "/lib/systemd/system/nginx.service" ] && { systemctl disable nginx > /dev/null 2>&1; rm -f /lib/systemd/system/nginx.service; }
   [ -d "${apache_install_dir}" ] && { service httpd stop > /dev/null 2>&1; rm -rf ${apache_install_dir} /etc/init.d/httpd /etc/logrotate.d/apache; sed -i "s@${apache_install_dir}/bin:@@" /etc/profile; echo "${CMSG}Apache uninstall completed! ${CEND}"; }
   [ -e "/lib/systemd/system/httpd.service" ] && { systemctl disable httpd > /dev/null 2>&1; rm -f /lib/systemd/system/httpd.service; }
-  [ -d "${tomcat_install_dir}" ] && { killall java > /dev/null 2>&1; chmod +x /etc/logrotate.d/tomcat; rm -rf ${tomcat_install_dir} /etc/init.d/tomcat /etc/logrotate.d/tomcat /usr/local/apr; echo "${CMSG}Tomcat uninstall completed! ${CEND}"; }
+  [ -d "${tomcat_install_dir}" ] && { killall java > /dev/null 2>&1; rm -rf ${tomcat_install_dir} /etc/init.d/tomcat /etc/logrotate.d/tomcat; echo "${CMSG}Tomcat uninstall completed! ${CEND}"; }
   [ -d "/usr/java" ] && { rm -rf /usr/java; sed -i '/export JAVA_HOME=/d' /etc/profile; sed -i '/export CLASSPATH=/d' /etc/profile; sed -i 's@\$JAVA_HOME/bin:@@' /etc/profile; }
   [ -e "${wwwroot_dir}" ] && /bin/mv ${wwwroot_dir}{,$(date +%Y%m%d%H)}
   sed -i 's@^website_name=.*@website_name=@' ./options.conf
   sed -i 's@^backup_content=.*@backup_content=@' ./options.conf
+  [ -d "${apr_install_dir}" ] && rm -rf ${apr_install_dir}
 }
 
 Print_MySQL() {
@@ -295,6 +296,7 @@ Print_ALLPHP() {
   [ -e "${imagick_install_dir}" ] && echo ${imagick_install_dir}
   [ -e "${gmagick_install_dir}" ] && echo ${gmagick_install_dir}
   [ -e "${curl_install_dir}" ] && echo ${curl_install_dir}
+  [ -e "${freetype_install_dir}" ] && echo ${freetype_install_dir}
 }
 
 Uninstall_PHP() {
@@ -325,6 +327,7 @@ Uninstall_ALLPHP() {
   [ -e "${imagick_install_dir}" ] && rm -rf ${imagick_install_dir}
   [ -e "${gmagick_install_dir}" ] && rm -rf ${gmagick_install_dir}
   [ -e "${curl_install_dir}" ] && rm -rf ${curl_install_dir}
+  [ -e "${freetype_install_dir}" ] && rm -rf ${freetype_install_dir}
 }
 
 Uninstall_PHPcache() {

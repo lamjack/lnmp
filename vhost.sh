@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -12,7 +12,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -250,7 +250,7 @@ If you enter '.', the field will be left blank.
         fi
       done
       [ "${moredomainame_flag}" == 'y' ] && moredomainame_D="$(for D in ${moredomainame}; do echo -d ${D}; done)"
-      ~/.acme.sh/acme.sh --issue --dns dns_${DNS_PRO} -d ${domain} ${moredomainame_D}
+      ~/.acme.sh/acme.sh --force --issue --dns dns_${DNS_PRO} -d ${domain} ${moredomainame_D}
     else
       if [ "${nginx_ssl_flag}" == 'y' ]; then
         [ ! -d ${web_install_dir}/conf/vhost ] && mkdir ${web_install_dir}/conf/vhost
@@ -287,7 +287,7 @@ EOF
       done
       rm -f ${vhostdir}/${auth_file}
       [ "${moredomainame_flag}" == 'y' ] && moredomainame_D="$(for D in ${moredomainame}; do echo -d ${D}; done)"
-      ~/.acme.sh/acme.sh --issue -d ${domain} ${moredomainame_D} -w ${vhostdir}
+      ~/.acme.sh/acme.sh --force --issue -d ${domain} ${moredomainame_D} -w ${vhostdir}
     fi
     if [ -s ~/.acme.sh/${domain}/fullchain.cer ]; then
       [ -e "${PATH_SSL}/${domain}.crt" ] && rm -f ${PATH_SSL}/${domain}.{crt,key}
@@ -300,7 +300,7 @@ EOF
       elif [ ! -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/bin/httpd" ]; then
         Command="${Apache_cmd}"
       fi
-      ~/.acme.sh/acme.sh --install-cert -d ${domain} --fullchain-file ${PATH_SSL}/${domain}.crt --key-file ${PATH_SSL}/${domain}.key --reloadcmd "${Command}" > /dev/null
+      ~/.acme.sh/acme.sh --force --install-cert -d ${domain} --fullchain-file ${PATH_SSL}/${domain}.crt --key-file ${PATH_SSL}/${domain}.key --reloadcmd "${Command}" > /dev/null
     else
       echo "${CFAILURE}Error: Create Let's Encrypt SSL Certificate failed! ${CEND}"
       [ -e "${web_install_dir}/conf/vhost/${domain}.conf" ] && rm -f ${web_install_dir}/conf/vhost/${domain}.conf
@@ -347,19 +347,20 @@ What Are You Doing?
       PHP_main_ver=${PHP_detail_ver%.*}
       while :; do echo
         echo 'Please select a version of the PHP:'
-        echo -e "\t${CMSG}1${CEND}. PHP ${PHP_main_ver} (default)"
-        [ -e "/dev/shm/php53-cgi.sock" ] && echo -e "\t${CMSG}2${CEND}. PHP 5.3"
-        [ -e "/dev/shm/php54-cgi.sock" ] && echo -e "\t${CMSG}3${CEND}. PHP 5.4"
-        [ -e "/dev/shm/php55-cgi.sock" ] && echo -e "\t${CMSG}4${CEND}. PHP 5.5"
-        [ -e "/dev/shm/php56-cgi.sock" ] && echo -e "\t${CMSG}5${CEND}. PHP 5.6"
-        [ -e "/dev/shm/php70-cgi.sock" ] && echo -e "\t${CMSG}6${CEND}. PHP 7.0"
-        [ -e "/dev/shm/php71-cgi.sock" ] && echo -e "\t${CMSG}7${CEND}. PHP 7.1"
-        [ -e "/dev/shm/php72-cgi.sock" ] && echo -e "\t${CMSG}8${CEND}. PHP 7.2"
-        [ -e "/dev/shm/php73-cgi.sock" ] && echo -e "\t${CMSG}9${CEND}. PHP 7.3"
+        echo -e "\t${CMSG} 1${CEND}. PHP ${PHP_main_ver} (default)"
+        [ -e "/dev/shm/php53-cgi.sock" ] && echo -e "\t${CMSG} 2${CEND}. PHP 5.3"
+        [ -e "/dev/shm/php54-cgi.sock" ] && echo -e "\t${CMSG} 3${CEND}. PHP 5.4"
+        [ -e "/dev/shm/php55-cgi.sock" ] && echo -e "\t${CMSG} 4${CEND}. PHP 5.5"
+        [ -e "/dev/shm/php56-cgi.sock" ] && echo -e "\t${CMSG} 5${CEND}. PHP 5.6"
+        [ -e "/dev/shm/php70-cgi.sock" ] && echo -e "\t${CMSG} 6${CEND}. PHP 7.0"
+        [ -e "/dev/shm/php71-cgi.sock" ] && echo -e "\t${CMSG} 7${CEND}. PHP 7.1"
+        [ -e "/dev/shm/php72-cgi.sock" ] && echo -e "\t${CMSG} 8${CEND}. PHP 7.2"
+        [ -e "/dev/shm/php73-cgi.sock" ] && echo -e "\t${CMSG} 9${CEND}. PHP 7.3"
+        [ -e "/dev/shm/php74-cgi.sock" ] && echo -e "\t${CMSG}10${CEND}. PHP 7.4"
         read -e -p "Please input a number:(Default 1 press Enter) " php_option
         php_option=${php_option:-1}
-        if [[ ! ${php_option} =~ ^[1-9]$ ]]; then
-          echo "${CWARNING}input error! Please only input number 1~9${CEND}"
+        if [[ ! ${php_option} =~ ^[1-9]$|^10$ ]]; then
+          echo "${CWARNING}input error! Please only input number 1~10${CEND}"
         else
           break
         fi
@@ -373,6 +374,7 @@ What Are You Doing?
     [ "${php_option}" == '7' ] && mphp_ver=71
     [ "${php_option}" == '8' ] && mphp_ver=72
     [ "${php_option}" == '9' ] && mphp_ver=73
+    [ "${php_option}" == '10' ] && mphp_ver=74
     [ ! -e "/dev/shm/php${mphp_ver}-cgi.sock" ] && unset mphp_ver
   fi
 
@@ -558,7 +560,7 @@ Nginx_rewrite() {
     echo
     echo "Please input the rewrite of programme :"
     echo "${CMSG}wordpress${CEND},${CMSG}opencart${CEND},${CMSG}magento2${CEND},${CMSG}drupal${CEND},${CMSG}joomla${CEND},${CMSG}codeigniter${CEND},${CMSG}laravel${CEND}"
-    echo "${CMSG}thinkphp${CEND},${CMSG}pathinfo${CEND},${CMSG}discuz${CEND},${CMSG}typecho${CEND},${CMSG}ecshop${CEND},${CMSG}nextcloud${CEND},${CMSG}zblog${CEND} rewrite was exist."
+    echo "${CMSG}thinkphp${CEND},${CMSG}pathinfo${CEND},${CMSG}discuz${CEND},${CMSG}typecho${CEND},${CMSG}ecshop${CEND},${CMSG}nextcloud${CEND},${CMSG}zblog${CEND},${CMSG}whmcs${CEND} rewrite was exist."
     read -e -p "(Default rewrite: other): " rewrite
     if [ "${rewrite}" == "" ]; then
       rewrite="other"
@@ -616,7 +618,7 @@ server {
     expires 7d;
     access_log off;
   }
-  location ~ /\.ht {
+  location ~ /(\.user\.ini|\.ht|\.git|\.svn|\.project|LICENSE|README\.md) {
     deny all;
   }
   ${NGX_CONF}
@@ -651,7 +653,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -678,7 +680,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -712,7 +714,7 @@ server {
     expires 7d;
     access_log off;
   }
-  location ~ /\.ht {
+  location ~ /(\.user\.ini|\.ht|\.git|\.svn|\.project|LICENSE|README\.md) {
     deny all;
   }
 }
@@ -769,7 +771,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -860,7 +862,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -901,7 +903,7 @@ server {
     expires 7d;
     access_log off;
   }
-  location ~ /\.ht {
+  location ~ /(\.user\.ini|\.ht|\.git|\.svn|\.project|LICENSE|README\.md) {
     deny all;
   }
 }
@@ -960,7 +962,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+      #
+#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -1047,7 +1049,7 @@ Del_NGX_Vhost() {
                 rm -rf ${Directory}
               fi
               echo
-              [ -d ~/.acme.sh/${domain} ] && ~/.acme.sh/acme.sh --remove -d ${domain} > /dev/null 2>&1
+              [ -d ~/.acme.sh/${domain} ] && ~/.acme.sh/acme.sh --force --remove -d ${domain} > /dev/null 2>&1
               echo "${CMSG}Domain: ${domain} has been deleted.${CEND}"
               echo
             else
@@ -1099,7 +1101,7 @@ Del_Apache_Vhost() {
 		fi
                 rm -rf ${Directory}
               fi
-              [ -d ~/.acme.sh/${domain} ] && ~/.acme.sh/acme.sh --remove -d ${domain} > /dev/null 2>&1
+              [ -d ~/.acme.sh/${domain} ] && ~/.acme.sh/acme.sh --force --remove -d ${domain} > /dev/null 2>&1
               echo "${CSUCCESS}Domain: ${domain} has been deleted.${CEND}"
             else
               echo "${CWARNING}Virtualhost: ${domain} was not exist! ${CEND}"

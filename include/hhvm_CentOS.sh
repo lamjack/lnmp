@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -13,16 +13,8 @@ Install_hhvm_CentOS() {
   id -u ${run_user} >/dev/null 2>&1
   [ $? -ne 0 ] && useradd -M -s /sbin/nologin ${run_user}
 
+  [ "${PM}" == 'yum' ] && [ ! -e /etc/yum.repos.d/epel.repo ] && yum -y install epel-release
   if [ "${CentOS_ver}" == '7' ]; then
-    [ ! -e /etc/yum.repos.d/epel.repo ] && cat > /etc/yum.repos.d/epel.repo << EOF
-[epel]
-name=Extra Packages for Enterprise Linux 7 - \$basearch
-#baseurl=http://download.fedoraproject.org/pub/epel/7/\$basearch
-mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=\$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=0
-EOF
     cat > /etc/yum.repos.d/hhvm.repo << EOF
 [hhvm]
 name=gleez hhvm-repo
@@ -35,15 +27,6 @@ EOF
   fi
 
   if [ "${CentOS_ver}" == '6' ]; then
-    [ ! -e /etc/yum.repos.d/epel.repo ] && cat > /etc/yum.repos.d/epel.repo << EOF
-[epel]
-name=Extra Packages for Enterprise Linux 6 - \$basearch
-#baseurl=http://download.fedoraproject.org/pub/epel/6/\$basearch
-mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=\$basearch
-failovermethod=priority
-enabled=1
-gpgcheck=0
-EOF
     # Install needed packages
     pkgList="libmcrypt-devel glog-devel jemalloc-devel tbb-devel libdwarf-devel libxml2-devel libicu-devel pcre-devel gd-devel boost-devel sqlite-devel pam-devel bzip2-devel oniguruma-devel openldap-devel readline-devel libc-client-devel libcap-devel libevent-devel libcurl-devel libmemcached-devel lcms2 inotify-tools"
     for Package in ${pkgList}; do

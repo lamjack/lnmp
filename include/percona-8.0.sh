@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -23,7 +23,7 @@ Install_Percona80() {
     sed -i "s@/usr/local/Percona-Server-${percona80_ver}-Linux.${SYS_BIT_b}.${sslLibVer}@${percona_install_dir}@g" ${percona_install_dir}/bin/mysqld_safe
     sed -i 's@executing mysqld_safe@executing mysqld_safe\nexport LD_PRELOAD=/usr/local/lib/libjemalloc.so@' ${percona_install_dir}/bin/mysqld_safe
   elif [ "${dbinstallmethod}" == "2" ]; then
-    boostVersion2=$(echo ${boost_ver} | awk -F. '{print $1"_"$2"_"$3}')
+    boostVersion2=$(echo ${boost_percona_ver} | awk -F. '{print $1"_"$2"_"$3}')
     tar xzf boost_${boostVersion2}.tar.gz
     tar xzf percona-server-${percona80_ver}.tar.gz
     pushd percona-server-${percona80_ver}
@@ -31,6 +31,7 @@ Install_Percona80() {
     -DMYSQL_DATADIR=${percona_data_dir} \
     -DDOWNLOAD_BOOST=1 \
     -DWITH_BOOST=../boost_${boostVersion2} \
+    -DFORCE_INSOURCE_BUILD=1 \
     -DSYSCONFDIR=/etc \
     -DWITH_INNOBASE_STORAGE_ENGINE=1 \
     -DWITH_PARTITION_STORAGE_ENGINE=1 \
@@ -48,6 +49,10 @@ Install_Percona80() {
     popd
   fi
 
+  # backup openssl so
+  #[ ! -e "${percona_install_dir}/lib/lib_bk" ] && mkdir ${percona_install_dir}/lib/lib_bk
+  #/bin/mv ${percona_install_dir}/lib/{libssl,libcrypto}.so* ${percona_install_dir}/lib/lib_bk/
+
   if [ -d "${percona_install_dir}/support-files" ]; then
     sed -i "s+^dbrootpwd.*+dbrootpwd='${dbrootpwd}'+" ../options.conf
     echo "${CSUCCESS}Percona installed successfully! ${CEND}"
@@ -58,7 +63,7 @@ Install_Percona80() {
     fi
   else
     rm -rf ${percona_install_dir}
-    echo "${CFAILURE}Percona install failed, Please contact the author! ${CEND}"
+    echo "${CFAILURE}Percona install failed, Please contact the author! ${CEND}" && lsb_release -a
     kill -9 $$
   fi
 

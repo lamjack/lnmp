@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -30,7 +30,6 @@ Install_PureFTPd() {
       chmod +x /etc/init.d/pureftpd
       [ "${PM}" == 'yum' ] && { chkconfig --add pureftpd; chkconfig pureftpd on; }
       [ "${PM}" == 'apt-get' ] && { sed -i 's@^. /etc/rc.d/init.d/functions@. /lib/lsb/init-functions@' /etc/init.d/pureftpd; update-rc.d pureftpd defaults; }
-      [ "${Debian_ver}" == '7' ] && sed -i 's@/var/lock/subsys/@/var/lock/@g' /etc/init.d/pureftpd
     fi
 
     [ ! -e "${pureftpd_install_dir}/etc" ] && mkdir ${pureftpd_install_dir}/etc
@@ -81,7 +80,7 @@ Install_PureFTPd() {
     rm -rf pure-ftpd-${pureftpd_ver}
   else
     rm -rf ${pureftpd_install_dir}
-    echo "${CFAILURE}Pure-Ftpd install failed, Please contact the author! ${CEND}"
+    echo "${CFAILURE}Pure-Ftpd install failed, Please contact the author! ${CEND}" && lsb_release -a
     kill -9 $$
   fi
   popd > /dev/null

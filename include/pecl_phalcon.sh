@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -26,7 +26,7 @@ Install_pecl_phalcon() {
         echo "${CSUCCESS}PHP phalcon module installed successfully! ${CEND}"
         rm -rf cphalcon-${phalcon_ver}
       else
-        echo "${CFAILURE}PHP phalcon module install failed, Please contact the author! ${CEND}"
+        echo "${CFAILURE}PHP phalcon module install failed, Please contact the author! ${CEND}" && lsb_release -a
       fi
     else
       echo "${CWARNING}Your php ${PHP_detail_ver} does not support phalcon! ${CEND}";

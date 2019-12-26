@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -54,7 +54,7 @@ EOF
         echo "${CSUCCESS}PHP ZendGuardLoader module installed successfully! ${CEND}"
       fi
     else
-      echo "Error! Your Apache's prefork or PHP already enable thread safety! "
+      echo "Error! Your Apache's prefork or PHP already enable thread safety or platform ${TARGET_ARCH} does not support ZendGuardLoader! "
     fi
     popd > /dev/null
   fi

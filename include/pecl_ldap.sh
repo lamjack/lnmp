@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 7+ and Ubuntu 12+
+# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -33,7 +33,7 @@ Install_pecl_ldap() {
       echo "${CSUCCESS}PHP ldap module installed successfully! ${CEND}"
       rm -rf php-${PHP_detail_ver}
     else
-      echo "${CFAILURE}PHP ldap module install failed, Please contact the author! ${CEND}"
+      echo "${CFAILURE}PHP ldap module install failed, Please contact the author! ${CEND}" && lsb_release -a
     fi
     popd > /dev/null
   fi
