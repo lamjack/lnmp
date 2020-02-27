@@ -30,11 +30,15 @@ checkDownload() {
     src_url=${mirrorLink}/jemalloc-${jemalloc_ver}.tar.bz2 && Download_src
   fi
 
+  # openssl1.1
+  if [[ ${nginx_option} =~ ^[1-3]$ ]]; then
+      echo "Download openSSL1.1..."
+      src_url=https://www.openssl.org/source/openssl-${openssl11_ver}.tar.gz && Download_src
+  fi
+
   # nginx/tengine/openresty
   case "${nginx_option}" in
     1)
-      echo "Download openSSL1.1..."
-      src_url=https://www.openssl.org/source/openssl-${openssl11_ver}.tar.gz && Download_src
       echo "Download nginx..."
       src_url=http://nginx.org/download/nginx-${nginx_ver}.tar.gz && Download_src
       ;;
@@ -670,6 +674,7 @@ checkDownload() {
       src_url=https://secure.php.net/distributions/php-${php74_ver}.tar.gz && Download_src
       src_url=http://mirrors.linuxeye.com/oneinstack/src/argon2-${argon2_ver}.tar.gz && Download_src
       src_url=http://mirrors.linuxeye.com/oneinstack/src/libsodium-${libsodium_ver}.tar.gz && Download_src
+      src_url=http://mirrors.linuxeye.com/oneinstack/src/libzip-${libzip_ver}.tar.gz && Download_src
       ;;
   esac
 
@@ -818,7 +823,7 @@ checkDownload() {
     else
       echo "Download pecl_memcache for php 7.x..."
       # src_url=https://codeload.github.com/websupport-sk/pecl-memcache/zip/php7 && Download_src
-      src_url=${mirrorLink}/pecl-memcache-${pecl_memcache_ver}.tar.gz && Download_src
+      src_url=https://pecl.php.net/get/memcache-${pecl_memcache_ver}.tgz && Download_src
     fi
   fi
 
