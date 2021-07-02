@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -50,7 +50,7 @@ Install_OpenResty() {
   fi
 
   mv ${openresty_install_dir}/nginx/conf/nginx.conf{,_bk}
-  if [[ ${apache_option} =~ ^[1-2]$ ]] || [ -e "${apache_install_dir}/bin/httpd" ]; then
+  if [ "${apache_flag}" == 'y' ] || [ -e "${apache_install_dir}/bin/httpd" ]; then
     /bin/cp ../config/nginx_apache.conf ${openresty_install_dir}/nginx/conf/nginx.conf 
   elif { [[ ${tomcat_option} =~ ^[1-4]$ ]] || [ -e "${tomcat_install_dir}/conf/server.xml" ]; } && { [[ ! ${php_option} =~ ^[1-9]$|^10$ ]] && [ ! -e "${php_install_dir}/bin/php" ]; }; then
     /bin/cp ../config/nginx_tomcat.conf ${openresty_install_dir}/nginx/conf/nginx.conf 

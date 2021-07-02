@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -21,6 +21,7 @@ Install_PHP80() {
     make -j ${THREAD} && make install
     popd > /dev/null
     rm -rf libiconv-${libiconv_ver}
+    ln -s ${libiconv_install_dir}/lib/libiconv.so.2 /usr/lib64/libiconv.so.2
   fi
 
   if [ ! -e "${curl_install_dir}/lib/libcurl.la" ]; then
@@ -103,12 +104,12 @@ Install_PHP80() {
   export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/:$PKG_CONFIG_PATH
   [ ! -d "${php_install_dir}" ] && mkdir -p ${php_install_dir}
   [ "${phpcache_option}" == '1' ] && phpcache_arg='--enable-opcache' || phpcache_arg='--disable-opcache'
-  if [ "${apache_option}" == '2' ] || [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
+  if [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
     ./configure --prefix=${php_install_dir} --with-config-file-path=${php_install_dir}/etc \
     --with-config-file-scan-dir=${php_install_dir}/etc/php.d \
     --with-apxs2=${apache_install_dir}/bin/apxs ${phpcache_arg} --disable-fileinfo \
     --enable-mysqlnd --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd \
-    --with-iconv=${libiconv_install_dir} --with-freetype --with-jpeg --with-zlib \
+    --with-iconv --with-freetype --with-jpeg --with-zlib \
     --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
     --enable-sysvsem --with-curl=${curl_install_dir} --enable-mbregex \
     --enable-mbstring --with-password-argon2 --with-sodium=/usr/local --enable-gd --with-openssl=${openssl_install_dir} \
@@ -119,14 +120,14 @@ Install_PHP80() {
     --with-config-file-scan-dir=${php_install_dir}/etc/php.d \
     --with-fpm-user=${run_user} --with-fpm-group=${run_group} --enable-fpm ${phpcache_arg} --disable-fileinfo \
     --enable-mysqlnd --with-mysqli=mysqlnd --with-pdo-mysql=mysqlnd \
-    --with-iconv=${libiconv_install_dir} --with-freetype --with-jpeg --with-zlib \
+    --with-iconv --with-freetype --with-jpeg --with-zlib \
     --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-exif \
     --enable-sysvsem --with-curl=${curl_install_dir} --enable-mbregex \
     --enable-mbstring --with-password-argon2 --with-sodium=/usr/local --enable-gd --with-openssl=${openssl_install_dir} \
     --with-mhash --enable-pcntl --enable-sockets --enable-ftp --enable-intl --with-xsl \
     --with-gettext --with-zip=/usr/local --enable-soap --disable-debug ${php_modules_options}
   fi
-  make ZEND_EXTRA_LIBS='-liconv' -j ${THREAD}
+  make ZEND_EXTRA_LIBS="-L${libiconv_install_dir}/lib/ -liconv" -j ${THREAD}
   make install
 
   if [ -e "${php_install_dir}/bin/phpize" ]; then
@@ -279,7 +280,7 @@ EOF
 
     service php-fpm start
 
-  elif [ "${apache_option}" == '2' ] || [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
+  elif [ "${Apache_main_ver}" == '22' ] || [ "${apache_mode_option}" == '2' ]; then
     service httpd restart
   fi
   popd > /dev/null

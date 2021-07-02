@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -12,7 +12,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #                         Uninstall OneinStack                        #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
@@ -34,7 +34,7 @@ Show_Help() {
   --quiet, -q                   quiet operation
   --all                         Uninstall All
   --web                         Uninstall Nginx/Tengine/OpenResty/Apache/Tomcat
-  --mysql                       Uninstall MySQL/MariaDB/Percona/AliSQL
+  --mysql                       Uninstall MySQL/MariaDB/Percona
   --postgresql                  Uninstall PostgreSQL
   --mongodb                     Uninstall MongoDB
   --php                         Uninstall PHP (PATH: ${php_install_dir})
@@ -44,17 +44,17 @@ Show_Help() {
   --php_extensions [ext name]   Uninstall PHP extensions, include zendguardloader,ioncube,
                                 sourceguardian,imagick,gmagick,fileinfo,imap,ldap,calendar,phalcon,
                                 yaf,yar,redis,memcached,memcache,mongodb,swoole,xdebug
-  --hhvm                        Uninstall HHVM
   --pureftpd                    Uninstall PureFtpd
   --redis                       Uninstall Redis-server
   --memcached                   Uninstall Memcached-server
   --phpmyadmin                  Uninstall phpMyAdmin
   --python                      Uninstall Python (PATH: ${python_install_dir})
+  --node                        Uninstall Nodejs (PATH: ${node_install_dir})
   "
 }
 
 ARG_NUM=$#
-TEMP=`getopt -o hvVq --long help,version,quiet,all,web,mysql,postgresql,mongodb,php,mphp_ver:,allphp,phpcache,php_extensions:,hhvm,pureftpd,redis,memcached,phpmyadmin,python -- "$@" 2>/dev/null`
+TEMP=`getopt -o hvVq --long help,version,quiet,all,web,mysql,postgresql,mongodb,php,mphp_ver:,allphp,phpcache,php_extensions:,pureftpd,redis,memcached,phpmyadmin,python,node -- "$@" 2>/dev/null`
 [ $? != 0 ] && echo "${CWARNING}ERROR: unknown argument! ${CEND}" && Show_Help && exit 1
 eval set -- "${TEMP}"
 while :; do
@@ -75,7 +75,7 @@ while :; do
       postgresql_flag=y
       mongodb_flag=y
       allphp_flag=y
-      hhvm_flag=y
+      node_flag=y
       pureftpd_flag=y
       redis_flag=y
       memcached_flag=y
@@ -129,8 +129,8 @@ while :; do
       [ -n "`echo ${php_extensions} | grep -w swoole`" ] && pecl_swoole=1
       [ -n "`echo ${php_extensions} | grep -w xdebug`" ] && pecl_xdebug=1
       ;;
-    --hhvm)
-      hhvm_flag=y; shift 1
+    --node)
+      node_flag=y; shift 1
       ;;
     --pureftpd)
       pureftpd_flag=y; shift 1
@@ -229,10 +229,10 @@ Print_MongoDB() {
 }
 
 Uninstall_MySQL() {
-  # uninstall mysql,mariadb,percona,alisql
+  # uninstall mysql,mariadb,percona
   if [ -d "${db_install_dir}/support-files" ]; then
     service mysqld stop > /dev/null 2>&1
-    rm -rf ${db_install_dir} /etc/init.d/mysqld /etc/my.cnf* /etc/ld.so.conf.d/*{mysql,mariadb,percona,alisql}*.conf
+    rm -rf ${db_install_dir} /etc/init.d/mysqld /etc/my.cnf* /etc/ld.so.conf.d/*{mysql,mariadb,percona}*.conf
     id -u mysql >/dev/null 2>&1 ; [ $? -eq 0 ] && userdel mysql
     [ -e "${db_data_dir}" ] && /bin/mv ${db_data_dir}{,$(date +%Y%m%d%H)}
     sed -i 's@^dbrootpwd=.*@dbrootpwd=@' ./options.conf
@@ -517,21 +517,6 @@ Menu_PHPext() {
   done
 }
 
-Print_HHVM() {
-  [ -e "/usr/bin/hhvm" ] && echo /usr/bin/hhvm
-  [ -e "/etc/hhvm" ] && echo /etc/hhvm
-  [ -e "/var/log/hhvm" ] && echo /var/log/hhvm
-  [ -e "/lib/systemd/system/hhvm.service" ] && echo /lib/systemd/system/hhvm.service
-  [ -e "/etc/supervisord.conf" ] && echo /etc/supervisord.conf
-  [ -e "/etc/init.d/supervisord" ] && echo /etc/init.d/supervisord
-}
-
-Uninstall_HHVM() {
-  [ -e "/lib/systemd/system/hhvm.service" ] && { systemctl disable hhvm > /dev/null 2>&1; rm -f /lib/systemd/system/hhvm.service; }
-  [ -e "/etc/init.d/supervisord" ] && { service supervisord stop > /dev/null 2>&1; rm -f /etc/supervisord.conf /etc/init.d/supervisord; }
-  [ -e "/usr/bin/hhvm" ] && { rpm -e hhvm; rm -rf /etc/hhvm /var/log/hhvm /usr/bin/hhvm; echo "${CMSG}HHVM uninstall completed! ${CEND}"; }
-}
-
 Print_PureFtpd() {
   [ -e "${pureftpd_install_dir}" ] && echo ${pureftpd_install_dir}
   [ -e "/etc/init.d/pureftpd" ] && echo /etc/init.d/pureftpd
@@ -584,24 +569,29 @@ Print_Python() {
   [ -d "${python_install_dir}" ] && echo ${python_install_dir}
 }
 
+Print_Node() {
+  [ -e "${node_install_dir}" ] && echo ${node_install_dir}
+  [ -e "/etc/profile.d/node.sh" ] && echo /etc/profile.d/node.sh
+}
+
 Menu() {
 while :; do
   printf "
 What Are You Doing?
 \t${CMSG} 0${CEND}. Uninstall All
 \t${CMSG} 1${CEND}. Uninstall Nginx/Tengine/OpenResty/Apache/Tomcat
-\t${CMSG} 2${CEND}. Uninstall MySQL/MariaDB/Percona/AliSQL
+\t${CMSG} 2${CEND}. Uninstall MySQL/MariaDB/Percona
 \t${CMSG} 3${CEND}. Uninstall PostgreSQL
 \t${CMSG} 4${CEND}. Uninstall MongoDB
 \t${CMSG} 5${CEND}. Uninstall all PHP
 \t${CMSG} 6${CEND}. Uninstall PHP opcode cache
 \t${CMSG} 7${CEND}. Uninstall PHP extensions
-\t${CMSG} 8${CEND}. Uninstall HHVM
-\t${CMSG} 9${CEND}. Uninstall PureFtpd
-\t${CMSG}10${CEND}. Uninstall Redis
-\t${CMSG}11${CEND}. Uninstall Memcached
-\t${CMSG}12${CEND}. Uninstall phpMyAdmin
-\t${CMSG}13${CEND}. Uninstall Python (PATH: ${python_install_dir})
+\t${CMSG} 8${CEND}. Uninstall PureFtpd
+\t${CMSG} 9${CEND}. Uninstall Redis
+\t${CMSG}10${CEND}. Uninstall Memcached
+\t${CMSG}11${CEND}. Uninstall phpMyAdmin
+\t${CMSG}12${CEND}. Uninstall Python (PATH: ${python_install_dir})
+\t${CMSG}13${CEND}. Uninstall Nodejs (PATH: ${node_install_dir})
 \t${CMSG} q${CEND}. Exit
 "
   echo
@@ -617,13 +607,13 @@ What Are You Doing?
       Print_PostgreSQL
       Print_MongoDB
       Print_ALLPHP
-      Print_HHVM
       Print_PureFtpd
       Print_Redis_server
       Print_Memcached_server
       Print_openssl
       Print_phpMyAdmin
       Print_Python
+      Print_Node
       Uninstall_status
       if [ "${uninstall_flag}" == 'y' ]; then
         Uninstall_Web
@@ -631,13 +621,13 @@ What Are You Doing?
         Uninstall_PostgreSQL
         Uninstall_MongoDB
         Uninstall_ALLPHP
-        Uninstall_HHVM
         Uninstall_PureFtpd
         Uninstall_Redis_server
         Uninstall_Memcached_server
         Uninstall_openssl
         Uninstall_phpMyAdmin
         . include/python.sh; Uninstall_Python
+        . include/node.sh; Uninstall_Node
       else
         exit
       fi
@@ -681,34 +671,34 @@ What Are You Doing?
       [ "${uninstall_flag}" == 'y' ] && Uninstall_PHPext || exit
       ;;
     8)
-      Print_HHVM
-      Uninstall_status
-      [ "${uninstall_flag}" == 'y' ] && Uninstall_HHVM || exit
-      ;;
-    9)
       Print_PureFtpd
       Uninstall_status
       [ "${uninstall_flag}" == 'y' ] && Uninstall_PureFtpd || exit
       ;;
-    10)
+    9)
       Print_Redis_server
       Uninstall_status
       [ "${uninstall_flag}" == 'y' ] && Uninstall_Redis_server || exit
       ;;
-    11)
+    10)
       Print_Memcached_server
       Uninstall_status
       [ "${uninstall_flag}" == 'y' ] && Uninstall_Memcached_server || exit
       ;;
-    12)
+    11)
       Print_phpMyAdmin
       Uninstall_status
       [ "${uninstall_flag}" == 'y' ] && Uninstall_phpMyAdmin || exit
       ;;
-    13)
+    12)
       Print_Python
       Uninstall_status
       [ "${uninstall_flag}" == 'y' ] && { . include/python.sh; Uninstall_Python; } || exit
+      ;;
+    13)
+      Print_Node
+      Uninstall_status
+      [ "${uninstall_flag}" == 'y' ] && { . include/node.sh; Uninstall_Node; } || exit
       ;;
     q)
       exit
@@ -731,12 +721,12 @@ else
     [ "${php_flag}" == 'y' ] && Print_PHP
     [ "${mphp_flag}" == 'y' ] && [ "${phpcache_flag}" != 'y' ] && [ -z "${php_extensions}" ] && Print_MPHP
   fi
-  [ "${hhvm_flag}" == 'y' ] && Print_HHVM
   [ "${pureftpd_flag}" == 'y' ] && Print_PureFtpd
   [ "${redis_flag}" == 'y' ] && Print_Redis_server
   [ "${memcached_flag}" == 'y' ] && Print_Memcached_server
   [ "${phpmyadmin_flag}" == 'y' ] && Print_phpMyAdmin
   [ "${python_flag}" == 'y' ] && Print_Python
+  [ "${node_flag}" == 'y' ] && Print_Node
   [ "${all_flag}" == 'y' ] && Print_openssl
   Uninstall_status
   if [ "${uninstall_flag}" == 'y' ]; then
@@ -754,12 +744,12 @@ else
       [ "${mphp_flag}" == 'y' ] && [ "${phpcache_flag}" == 'y' ] && { php_install_dir=${php_install_dir}${mphp_ver}; Uninstall_PHPcache; }
       [ "${mphp_flag}" == 'y' ] && [ -n "${php_extensions}" ] && { php_install_dir=${php_install_dir}${mphp_ver}; Uninstall_PHPext; }
     fi
-    [ "${hhvm_flag}" == 'y' ] && Uninstall_HHVM
     [ "${pureftpd_flag}" == 'y' ] && Uninstall_PureFtpd
     [ "${redis_flag}" == 'y' ] && Uninstall_Redis_server
     [ "${memcached_flag}" == 'y' ] && Uninstall_Memcached_server
     [ "${phpmyadmin_flag}" == 'y' ] && Uninstall_phpMyAdmin
     [ "${python_flag}" == 'y' ] && { . include/python.sh; Uninstall_Python; }
+    [ "${node_flag}" == 'y' ] && { . include/node.sh; Uninstall_Node; }
     [ "${all_flag}" == 'y' ] && Uninstall_openssl
   fi
 fi

@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -51,7 +51,11 @@ Install_Tomcat8() {
   pushd ${tomcat_install_dir}/bin > /dev/null
   tar xzf tomcat-native.tar.gz
   pushd tomcat-native-*-src/native > /dev/null
-  ./configure --prefix=${apr_install_dir} --with-apr=${apr_install_dir} --with-ssl=${openssl_install_dir}
+  if [ "${armplatform}" == "y" ]; then
+    ./configure --prefix=${apr_install_dir} --with-apr=${apr_install_dir}
+  else
+    ./configure --prefix=${apr_install_dir} --with-apr=${apr_install_dir} --with-ssl=${openssl_install_dir}
+  fi
   make -j ${THREAD} && make install
   popd > /dev/null
   rm -rf tomcat-native-*

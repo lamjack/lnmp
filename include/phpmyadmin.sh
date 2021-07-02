@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -13,7 +13,7 @@ Install_phpMyAdmin() {
     pushd ${oneinstack_dir}/src > /dev/null
     PHP_detail_ver=`${php_install_dir}/bin/php-config --version`
     PHP_main_ver=${PHP_detail_ver%.*}
-    if [[ "${PHP_main_ver}" =~ ^5.[3-4]$ ]]; then
+    if [[ "${PHP_main_ver}" =~ ^5.[3-6]$|^7.0$ ]]; then
       tar xzf phpMyAdmin-${phpmyadmin_oldver}-all-languages.tar.gz
       /bin/mv phpMyAdmin-${phpmyadmin_oldver}-all-languages ${wwwroot_dir}/default/phpMyAdmin
     else

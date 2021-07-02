@@ -2,7 +2,7 @@
 # Author:  yeho <lj2007331 AT gmail.com>
 # BLOG:  https://linuxeye.com
 #
-# Notes: OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+
+# Notes: OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+
 #
 # Project home page:
 #       https://oneinstack.com
@@ -12,7 +12,7 @@ export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 clear
 printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -111,17 +111,16 @@ Choose_ENV() {
     [ "$(${apache_install_dir}/bin/apachectl -v | awk -F'.' /version/'{print $2}')" == '4' ] && { Apache_main_ver=24; Apache_grant='Require all granted'; }
     [ "$(${apache_install_dir}/bin/apachectl -v | awk -F'.' /version/'{print $2}')" == '2' ] && Apache_main_ver=22
   fi
-  if [ -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" -a -e "/usr/bin/hhvm" ]; then
-    Number=111
+  if [ -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" ]; then
+    Number=11
     while :; do echo
       echo "Please choose to use environment:"
       echo -e "\t${CMSG}1${CEND}. Use php"
       echo -e "\t${CMSG}2${CEND}. Use java"
-      echo -e "\t${CMSG}3${CEND}. Use hhvm"
       read -e -p "Please input a number:(Default 1 press Enter) " ENV_FLAG
       ENV_FLAG=${ENV_FLAG:-1}
-      if [[ ! ${ENV_FLAG} =~ ^[1-3]$ ]]; then
-        echo "${CWARNING}input error! Please only input number 1~3${CEND}"
+      if [[ ! ${ENV_FLAG} =~ ^[1-2]$ ]]; then
+        echo "${CWARNING}input error! Please only input number 1~2${CEND}"
       else
         break
       fi
@@ -133,69 +132,15 @@ Choose_ENV() {
       2)
         NGX_FLAG=java
         ;;
-      3)
-        NGX_FLAG=hhvm
-        ;;
     esac
-  elif [ -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" -a ! -e "/usr/bin/hhvm" ]; then
-    Number=110
-    while :; do echo
-      echo "Please choose to use environment:"
-      echo -e "\t${CMSG}1${CEND}. Use php"
-      echo -e "\t${CMSG}2${CEND}. Use java"
-      read -e -p "Please input a number:(Default 1 press Enter) " ENV_FLAG
-      ENV_FLAG=${ENV_FLAG:-1}
-      if [[ ! ${ENV_FLAG} =~ ^[1-2]$ ]]; then
-        echo "${CWARNING}input error! Please only input number 1~2${CEND}"
-      else
-        break
-      fi
-    done
-    [ "${ENV_FLAG}" == '1' ] && NGX_FLAG=php
-    [ "${ENV_FLAG}" == '2' ] && NGX_FLAG=java
-  elif [ -e "${php_install_dir}/bin/phpize" -a ! -e "${tomcat_install_dir}/conf/server.xml" -a ! -e "/usr/bin/hhvm" ]; then
-    Number=100
+  elif [ -e "${php_install_dir}/bin/phpize" -a ! -e "${tomcat_install_dir}/conf/server.xml" ]; then
+    Number=10
     NGX_FLAG=php
-  elif [ -e "${php_install_dir}/bin/phpize" -a ! -e "${tomcat_install_dir}/conf/server.xml" -a -e "/usr/bin/hhvm" ]; then
-    Number=101
-    while :; do echo
-      echo "Please choose to use environment:"
-      echo -e "\t${CMSG}1${CEND}. Use php"
-      echo -e "\t${CMSG}2${CEND}. Use hhvm"
-      read -e -p "Please input a number:(Default 1 press Enter) " ENV_FLAG
-      ENV_FLAG=${ENV_FLAG:-1}
-      if [[ ! ${ENV_FLAG} =~ ^[1-2]$ ]]; then
-        echo "${CWARNING}input error! Please only input number 1~2${CEND}"
-      else
-        break
-      fi
-    done
-    [ "${ENV_FLAG}" == '1' ] && NGX_FLAG=php
-    [ "${ENV_FLAG}" == '2' ] && NGX_FLAG=hhvm
-  elif [ ! -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" -a -e "/usr/bin/hhvm" ]; then
-    Number=011
-    while :; do echo
-      echo "Please choose to use environment:"
-      echo -e "\t${CMSG}1${CEND}. Use java"
-      echo -e "\t${CMSG}2${CEND}. Use hhvm"
-      read -e -p "Please input a number:(Default 1 press Enter) " ENV_FLAG
-      ENV_FLAG=${ENV_FLAG:-1}
-      if [[ ! ${ENV_FLAG} =~ ^[1-2]$ ]]; then
-        echo "${CWARNING}input error! Please only input number 1~2${CEND}"
-      else
-        break
-      fi
-    done
-    [ "${ENV_FLAG}" == '1' ] && NGX_FLAG=java
-    [ "${ENV_FLAG}" == '2' ] && NGX_FLAG=hhvm
-  elif [ ! -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" -a ! -e "/usr/bin/hhvm" ]; then
-    Number=010
+  elif [ ! -e "${php_install_dir}/bin/phpize" -a -e "${tomcat_install_dir}/conf/server.xml" ]; then
+    Number=01
     NGX_FLAG=java
-  elif [ ! -e "${php_install_dir}/bin/phpize" -a ! -e "${tomcat_install_dir}/conf/server.xml" -a -e "/usr/bin/hhvm" ]; then
-    Number=001
-    NGX_FLAG=hhvm
   else
-    Number=000
+    Number=00
     NGX_FLAG=php
   fi
 }
@@ -403,9 +348,6 @@ What Are You Doing?
       ;;
     "java")
       NGX_CONF=$(echo -e "location ~ {\n    proxy_pass http://127.0.0.1:8080;\n    include proxy.conf;\n  }")
-      ;;
-    "hhvm")
-      NGX_CONF=$(echo -e "location ~ .*\.(php|php5)?$ {\n    fastcgi_pass unix:/var/log/hhvm/sock;\n    fastcgi_index index.php;\n    fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;\n    include fastcgi_params;\n  }")
       ;;
   esac
 
@@ -680,7 +622,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -707,7 +649,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -717,7 +659,7 @@ EOF
   echo "$(printf "%-30s" "index url:")${CMSG}http://${domain}:8080/${CEND}"
 }
 
-Create_nginx_phpfpm_hhvm_conf() {
+Create_nginx_phpfpm_conf() {
   [ ! -d ${web_install_dir}/conf/vhost ] && mkdir ${web_install_dir}/conf/vhost
   cat > ${web_install_dir}/conf/vhost/${domain}.conf << EOF
 server {
@@ -754,7 +696,6 @@ EOF
     sed -i "s@^  set \$MAGE_ROOT.*;@  set \$MAGE_ROOT ${vhostdir};@" ${web_install_dir}/conf/vhost/${domain}.conf
     sed -i "s@^  server_name.*;@  server_name ${domain}${moredomainame};@" ${web_install_dir}/conf/vhost/${domain}.conf
     sed -i "s@^  server_name.*;@&\n  ${Nginx_log}@" ${web_install_dir}/conf/vhost/${domain}.conf
-    [ "${NGX_FLAG}" == 'hhvm' ] && sed -i 's@fastcgi_pass unix:.*;@fastcgi_pass unix:/var/log/hhvm/sock;@g' ${web_install_dir}/conf/vhost/${domain}.conf
     if [ "${anti_hotlinking_flag}" == 'y' ]; then
       sed -i "s@^  root.*;@&\n  }@" ${web_install_dir}/conf/vhost/${domain}.conf
       sed -i "s@^  root.*;@&\n    }@" ${web_install_dir}/conf/vhost/${domain}.conf
@@ -798,7 +739,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -889,7 +830,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -980,7 +921,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -1080,7 +1021,7 @@ EOF
 
   printf "
 #######################################################################
-#       OneinStack for CentOS/RedHat 6+ Debian 8+ and Ubuntu 14+      #
+#       OneinStack for CentOS/RedHat 7+ Debian 8+ and Ubuntu 16+      #
 #       For more information please visit https://oneinstack.com      #
 #######################################################################
 "
@@ -1106,7 +1047,7 @@ Add_Vhost() {
           Create_nginx_tomcat_conf
         else
           Nginx_log
-          Create_nginx_phpfpm_hhvm_conf
+          Create_nginx_phpfpm_conf
         fi
     fi
   elif [ ! -e "${web_install_dir}/sbin/nginx" -a -e "${apache_install_dir}/bin/httpd" ]; then
@@ -1126,10 +1067,6 @@ Add_Vhost() {
       Nginx_rewrite
       Nginx_log
       Create_nginx_tomcat_conf
-    elif [ "${NGX_FLAG}" == "hhvm" ]; then
-      Nginx_rewrite
-      Nginx_log
-      Create_nginx_phpfpm_hhvm_conf
     elif [ "${NGX_FLAG}" == "php" ]; then
       Nginx_log
       Apache_log
